@@ -143,7 +143,7 @@ window.MH_PROMPTS = (() => {
         'clip-path 型（圆形、墨水、斜切、光圈、液面）直接用 Web Animations 补间 clip-path 关键帧。',
         '遮罩型（点阵扩散、百叶窗、网点溶解、柔光圆）把半径或宽度写成用 CSS.registerProperty 注册的 --vr / --vw，再补间这个变量。',
         '整页使用：MH.bindThemeToggle(按钮, 切换主题的函数, "' + k + '")，内部是 document.startViewTransition(切换主题)，再对 ::view-transition-new(root) 做同样的动画。',
-        '点一次就切一次：新的点击到来时，上一次过渡如果还没播完，先 skipTransition() 让它直接到终点，再开始新的。舞台演示同理：取消正在播的动画、把状态落定，再开始新的。',
+        '点一次就切一次：新的点击到来时，上一次过渡如果还没播完，skipTransition() 让它直接到终点，这一次直接切换、不再开新的过渡（不叠加快照，连点更稳定）。舞台演示同理：取消正在播的动画、把状态落定，再开始新的。',
         '形状：' + shape,
       ],
       params: ['缓动 cubic-bezier(.6,0,.2,1)', '触发点 = 点击位置（键盘触发时用按钮中心）'],

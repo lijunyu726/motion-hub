@@ -111,12 +111,13 @@
 
   // ───── 真实网站用：整页深浅切换 ─────
   // apply() 负责真正改主题（例如切换 <html data-theme>）；不支持 View Transitions 或减少动态效果时直接调用 apply()。
-  // 点一次就切一次：上一次过渡没播完时，先 skipTransition() 让它直接到终点，再开始这一次。
+  // 点一次就切一次：上一次过渡没播完时，skipTransition() 让它直接到终点，这一次直接切换，不再开新的过渡。
   let active = null;
   MH.themeSwitch = (e, apply, id = 'dots') => {
     const fx = FX[id] || FX.dots, root = document.documentElement;
     if (!document.startViewTransition || MH.still()) return apply();
-    if (active) active.skipTransition();
+    // 上一次还没播完：让它直接到终点，这一次直接切换、不再开新的过渡（不叠加快照，连点也稳定）
+    if (active) { active.skipTransition(); return apply(); }
     const r = e.currentTarget && e.currentTarget.getBoundingClientRect ? e.currentTarget.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
     const x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
     const W = innerWidth, H = innerHeight, R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y)), s = 1;
