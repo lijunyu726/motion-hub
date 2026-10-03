@@ -58,9 +58,9 @@
       const box = el.lastElementChild, [day, night] = box.children;
       let cur = 'day', running = false, timer = 0, lastReal = -1e9, settle = null;
       night.style.visibility = 'hidden';
-      // 点一次就切一次：上一次还没播完时，先把它直接跳到终点，再开始这一次（连点就来回切）
+      // 过渡播完之前再点不生效，等这一次播完才能再切（连点时被打断很生硬）
       const play = (x, y) => {
-        if (settle) settle();
+        if (settle) return;
         const W = box.clientWidth, H = box.clientHeight, s = MH.scaleOf(W), R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y));
         const top = cur === 'day' ? night : day, bottom = cur === 'day' ? day : night;
         cur = cur === 'day' ? 'night' : 'day'; // 目标状态立刻生效
@@ -111,13 +111,12 @@
 
   // ───── 真实网站用：整页深浅切换 ─────
   // apply() 负责真正改主题（例如切换 <html data-theme>）；不支持 View Transitions 或减少动态效果时直接调用 apply()。
-  // 点一次就切一次：上一次过渡没播完时，skipTransition() 让它直接到终点，这一次直接切换，不再开新的过渡。
+  // 过渡播完之前再点不生效，等这一次播完才能再切。
   let active = null;
   MH.themeSwitch = (e, apply, id = 'dots') => {
     const fx = FX[id] || FX.dots, root = document.documentElement;
     if (!document.startViewTransition || MH.still()) return apply();
-    // 上一次还没播完：让它直接到终点，这一次直接切换、不再开新的过渡（不叠加快照，连点也稳定）
-    if (active) { active.skipTransition(); return apply(); }
+    if (active) return;
     const r = e.currentTarget && e.currentTarget.getBoundingClientRect ? e.currentTarget.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
     const x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
     const W = innerWidth, H = innerHeight, R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y)), s = 1;
@@ -135,15 +134,7 @@
     }).catch(() => {});
     vt.finished.finally(() => { if (active === vt) { active = null; delete root.dataset.vfx; } });
   };
-  // 绑定深浅开关。过渡进行中整页被快照盖住，点击会落在 <html> 上而不是按钮上（实测），
-  // 所以过渡期间按坐标判断：点在按钮范围内就算点了按钮。
-  MH.bindThemeToggle = (btn, apply, id = 'dots') => {
-    btn.addEventListener('click', e => MH.themeSwitch(e, apply, id));
-    document.addEventListener('click', e => {
-      if (!active || e.target !== document.documentElement) return;
-      const r = btn.getBoundingClientRect();
-      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) MH.themeSwitch({ clientX: e.clientX, clientY: e.clientY, currentTarget: btn }, apply, id);
-    });
-  };
+  // 绑定深浅开关（过渡播完之前再点不生效）
+  MH.bindThemeToggle = (btn, apply, id = 'dots') => btn.addEventListener('click', e => MH.themeSwitch(e, apply, id));
   MH.themeFx = Object.keys(FX);
 })();
