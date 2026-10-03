@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motion Hub · 网页动效合集</title>
+<meta name="description" content="网页动效合集：背景、深浅切换过渡、拉扯翻页、片头与小交互。原生 JavaScript，无依赖。">
+<script>
+  // 先定深浅色再渲染，避免闪一下：本地记住的选择优先，否则跟随系统
+  (() => { let m = null; try { m = localStorage.getItem('mh-theme'); } catch (e) {}
+    if ((m || (matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day')) === 'night') document.documentElement.dataset.theme = 'night'; })();
+</script>
+<link rel="stylesheet" href="src/hub.css">
+<script src="src/core.js"></script>
+<script src="src/effects/backgrounds.js"></script>
+<script src="src/effects/transitions.js"></script>
+<script src="src/effects/pull.js"></script>
+<script src="src/effects/intro.js"></script>
+<script src="src/effects/ui.js"></script>
+</head>
+<body>
+<header class="hd">
+  <a class="logo" href="#">MOTION HUB</a>
+  <span class="count" id="count"></span>
+  <nav>
+    <a href="https://github.com/lijunyu726/motion-hub" target="_blank" rel="noopener">GitHub</a>
+    <button class="sm" id="mode" type="button"></button>
+  </nav>
+</header>
+<div class="bench">
+  <aside class="list" id="list" aria-label="效果列表"></aside>
+  <main class="main">
+    <div class="stage" id="stage"></div>
+    <section class="info">
+      <div>
+        <div class="cat" id="cat"></div>
+        <h1 id="name"></h1>
+        <p id="desc"></p>
+        <div class="tech" id="tech"></div>
+        <div class="act"><button id="reset" type="button">↻ 重置</button><button id="full" type="button">⛶ 全屏</button></div>
+      </div>
+      <div class="use"><pre id="use"></pre><button class="copy" id="copy" type="button">复制</button></div>
+    </section>
+  </main>
+</div>
+<footer class="ft-bar">
+  <span>MIT License · © 2026 LJY · 原生 JavaScript，无依赖</span>
+  <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">鲁ICP备2026056774号-1</a></span>
+</footer>
+<script>
+const $ = id => document.getElementById(id);
+const CATS = ['背景', '过渡', '翻页', '片头', '交互'];
+const FILE = { 背景: 'backgrounds', 过渡: 'transitions', 翻页: 'pull', 片头: 'intro', 交互: 'ui' };
+const list = MH.effects.slice().sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat));
+$('count').textContent = `${list.length} 个效果 · ${CATS.length} 类`;
+
+// 左侧名单：按分类分组，每类标数量
+let n = 0;
+$('list').innerHTML = CATS.map(c => {
+  const items = list.filter(e => e.cat === c);
+  return `<h2>${c}<span>${items.length}</span></h2>` + items.map(e => `<button type="button" data-id="${e.id}"><i>${String(++n).padStart(2, '0')}</i>${e.name}</button>`).join('');
+}).join('');
+
+// 舞台：同一时间只运行一个效果；切换时销毁旧的
+let cur = null, inst = null;
+function select(id, push = true) {
+  const e = list.find(x => x.id === id) || list[0];
+  if (inst) inst.destroy();
+  $('stage').replaceChildren();
+  cur = e; inst = e.mount($('stage'), {}); inst.resume();
+  document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b.dataset.id === e.id));
+  document.querySelector(`#list button[data-id="${e.id}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  $('cat').textContent = e.cat; $('name').textContent = e.name; $('desc').textContent = e.desc; $('tech').textContent = e.tech;
+  $('use').textContent = usage(e);
+  if (push && location.hash !== '#' + e.id) history.replaceState(null, '', '#' + e.id);
+}
+// “怎么用”：在自己的页面里引入两个文件、挂到一个有尺寸的容器上
+function usage(e) {
+  const head = `<div id="fx" style="height:420px"></div>\n<link rel="stylesheet" href="src/hub.css">\n<script src="src/core.js"><\/script>\n<script src="src/effects/${FILE[e.cat]}.js"><\/script>\n`;
+  if (e.cat === '过渡') return head + `<script>\n  // 整页深浅切换（View Transitions）\n  btn.onclick = ev => MH.themeSwitch(ev, () => {\n    document.documentElement.dataset.theme =\n      document.documentElement.dataset.theme === 'night' ? 'day' : 'night';\n  }, '${e.id.replace('theme-', '')}');\n<\/script>`;
+  return head + `<script>\n  ${e.usage ? e.usage.replace(/\n/g, '\n  ') : `MH.effects.find(e => e.id === '${e.id}')\n    .mount(document.getElementById('fx'), {}).resume();`}\n<\/script>`;
+}
+$('list').addEventListener('click', ev => { const b = ev.target.closest('button[data-id]'); if (b) select(b.dataset.id); });
+// 上下方向键切换效果；当前是拉扯翻页时，方向键交给它翻页
+addEventListener('keydown', ev => {
+  if (cur && cur.id === 'pull') return;
+  if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
+  ev.preventDefault();
+  const i = list.indexOf(cur), j = (i + (ev.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length;
+  select(list[j].id);
+});
+addEventListener('hashchange', () => select(location.hash.slice(1), false));
+$('reset').addEventListener('click', () => select(cur.id));
+$('full').addEventListener('click', () => { const s = $('stage'); document.fullscreenElement ? document.exitFullscreen() : s.requestFullscreen && s.requestFullscreen(); });
+$('copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('use').textContent); $('copy').textContent = '已复制'; } catch (e) { $('copy').textContent = '复制失败'; } setTimeout(() => $('copy').textContent = '复制', 1400); });
+
+// 深浅开关：图标和“太阳月亮开关”同一套；过渡用当前选中的那一种（选中的不是过渡时用点阵扩散）
+(() => {
+  const btn = $('mode'), rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<line x1="12" y1="2.5" x2="12" y2="4.5" transform="rotate(${a} 12 12)"/>`).join('');
+  btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><mask id="mode-mask"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><circle class="bite" cx="28" cy="2" r="7.5" fill="#000"/></mask><circle class="core" cx="12" cy="12" r="5" fill="currentColor" mask="url(#mode-mask)"/><g class="rays" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">${rays}</g></svg>`;
+  const dark = () => document.documentElement.dataset.theme === 'night';
+  const label = () => { const t = dark() ? '切换到浅色模式' : '切换到深色模式'; btn.classList.toggle('moon', !dark()); btn.title = t; btn.setAttribute('aria-label', t); };
+  label();
+  btn.addEventListener('click', ev => {
+    const fx = cur && cur.cat === '过渡' ? cur.id.replace('theme-', '') : 'dots';
+    MH.themeSwitch(ev, () => {
+      if (dark()) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = 'night';
+      try { localStorage.setItem('mh-theme', dark() ? 'night' : 'day'); } catch (e) {}
+      label();
+    }, fx);
+  });
+})();
+
+select(location.hash.slice(1), false);
+</script>
+</body>
+</html>
