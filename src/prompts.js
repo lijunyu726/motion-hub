@@ -142,11 +142,12 @@ window.MH_PROMPTS = (() => {
         '舞台演示：两层小页面（浅色、深色）叠在一起，新的一层在上面按形状揭开。',
         'clip-path 型（圆形、墨水、斜切、光圈、液面）直接用 Web Animations 补间 clip-path 关键帧。',
         '遮罩型（点阵扩散、百叶窗、网点溶解、柔光圆）把半径或宽度写成用 CSS.registerProperty 注册的 --vr / --vw，再补间这个变量。',
-        '整页使用：MH.themeSwitch(event, 切换主题的函数, "' + k + '")，内部是 document.startViewTransition(切换主题)，再对 ::view-transition-new(root) 做同样的动画。',
+        '整页使用：MH.bindThemeToggle(按钮, 切换主题的函数, "' + k + '")，内部是 document.startViewTransition(切换主题)，再对 ::view-transition-new(root) 做同样的动画。',
+        '点一次就切一次：新的点击到来时，上一次过渡如果还没播完，先 skipTransition() 让它直接到终点，再开始新的。舞台演示同理：取消正在播的动画、把状态落定，再开始新的。',
         '形状：' + shape,
       ],
       params: ['缓动 cubic-bezier(.6,0,.2,1)', '触发点 = 点击位置（键盘触发时用按钮中心）'],
-      notes: ['View Transitions 支持 Chrome / Edge 111+、Safari 18+；不支持或开启“减少动态效果”时直接切换。', '旧快照和新快照都要 animation: none，只让新快照按形状出现。', '如果背景有 canvas 动画，点切换按钮时不要再触发背景的点击效果，否则会被快照冻住。'],
+      notes: ['View Transitions 支持 Chrome / Edge 111+、Safari 18+；不支持或开启“减少动态效果”时直接切换。', '过渡进行中，整页被快照盖住，点击会落在 <html> 上而不是按钮上（实测），所以连点时第二下会丢。要在 document 上监听 click：过渡期间点击坐标落在按钮范围内，就当作点了按钮。', '旧快照和新快照都要 animation: none，只让新快照按形状出现。', '如果背景有 canvas 动画，点切换按钮时不要再触发背景的点击效果，否则会被快照冻住。'],
     };
   }
   return P;

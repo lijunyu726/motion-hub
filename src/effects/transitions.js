@@ -56,27 +56,39 @@
     return (el, opts) => {
       el.insertAdjacentHTML('beforeend', `<div class="tt">${scene('day')}${scene('night')}</div>`);
       const box = el.lastElementChild, [day, night] = box.children;
-      let cur = 'day', busy = false, running = false, timer = 0, lastReal = -1e9;
+      let cur = 'day', running = false, timer = 0, lastReal = -1e9, settle = null;
       night.style.visibility = 'hidden';
-      const play = async (x, y) => {
-        if (busy) return; busy = true;
+      // 点一次就切一次：上一次还没播完时，先把它直接跳到终点，再开始这一次（连点就来回切）
+      const play = (x, y) => {
+        if (settle) settle();
         const W = box.clientWidth, H = box.clientHeight, s = MH.scaleOf(W), R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y));
         const top = cur === 'day' ? night : day, bottom = cur === 'day' ? day : night;
+        cur = cur === 'day' ? 'night' : 'day'; // 目标状态立刻生效
         sizeVars(top, s); top.style.setProperty('--vx', x + 'px'); top.style.setProperty('--vy', y + 'px');
         top.dataset.fx = id; top.style.zIndex = 2; bottom.style.zIndex = 1; top.style.visibility = 'visible';
-        if (MH.still()) { /* 直接切换 */ }
-        else if (id === 'flip') {
+        const anims = []; let done = false;
+        settle = () => {
+          if (done) return; done = true; settle = null;
+          anims.forEach(a => a.cancel());
+          delete top.dataset.fx; top.style.visibility = 'visible'; bottom.style.visibility = 'hidden';
+          top.style.zIndex = 1; bottom.style.zIndex = 0;
+        };
+        if (MH.still()) return settle();
+        const quiet = () => {}; // 被打断时动画会被 cancel，finished 会 reject，忽略即可
+        if (id === 'flip') {
           const o = { duration: fx.dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
           top.style.visibility = 'hidden';
-          await bottom.animate([{ transform: 'rotateY(0)' }, { transform: 'rotateY(90deg)' }], o).finished;
-          top.style.visibility = 'visible'; bottom.style.visibility = 'hidden';
-          await top.animate([{ transform: 'rotateY(-90deg)' }, { transform: 'rotateY(0)' }], o).finished;
-          bottom.getAnimations().forEach(a => a.cancel()); top.getAnimations().forEach(a => a.cancel());
+          const a1 = bottom.animate([{ transform: 'rotateY(0)' }, { transform: 'rotateY(90deg)' }], o); anims.push(a1);
+          a1.finished.then(() => {
+            if (done) return;
+            top.style.visibility = 'visible'; bottom.style.visibility = 'hidden';
+            const a2 = top.animate([{ transform: 'rotateY(-90deg)' }, { transform: 'rotateY(0)' }], o); anims.push(a2);
+            a2.finished.then(settle, quiet);
+          }, quiet);
         } else {
-          await top.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE }).finished;
+          const a = top.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE }); anims.push(a);
+          a.finished.then(settle, quiet);
         }
-        delete top.dataset.fx; bottom.style.visibility = 'hidden';
-        cur = cur === 'day' ? 'night' : 'day'; busy = false;
       };
       const onDown = e => { lastReal = performance.now(); const r = box.getBoundingClientRect(); play(e.clientX - r.left, e.clientY - r.top); };
       box.addEventListener('pointerdown', onDown);
@@ -99,15 +111,18 @@
 
   // ───── 真实网站用：整页深浅切换 ─────
   // apply() 负责真正改主题（例如切换 <html data-theme>）；不支持 View Transitions 或减少动态效果时直接调用 apply()。
+  // 点一次就切一次：上一次过渡没播完时，先 skipTransition() 让它直接到终点，再开始这一次。
+  let active = null;
   MH.themeSwitch = (e, apply, id = 'dots') => {
     const fx = FX[id] || FX.dots, root = document.documentElement;
     if (!document.startViewTransition || MH.still()) return apply();
+    if (active) active.skipTransition();
     const r = e.currentTarget && e.currentTarget.getBoundingClientRect ? e.currentTarget.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
     const x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
     const W = innerWidth, H = innerHeight, R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y)), s = 1;
     root.dataset.vfx = id; sizeVars(root, s);
     root.style.setProperty('--vx', x + 'px'); root.style.setProperty('--vy', y + 'px');
-    const vt = document.startViewTransition(apply);
+    const vt = document.startViewTransition(apply); active = vt;
     vt.ready.then(() => {
       if (id === 'flip') {
         const o = { duration: fx.dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
@@ -116,8 +131,18 @@
       } else if (fx.shape && id !== 'fade') {
         root.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE, pseudoElement: '::view-transition-new(root)' });
       }
+    }).catch(() => {});
+    vt.finished.finally(() => { if (active === vt) { active = null; delete root.dataset.vfx; } });
+  };
+  // 绑定深浅开关。过渡进行中整页被快照盖住，点击会落在 <html> 上而不是按钮上（实测），
+  // 所以过渡期间按坐标判断：点在按钮范围内就算点了按钮。
+  MH.bindThemeToggle = (btn, apply, id = 'dots') => {
+    btn.addEventListener('click', e => MH.themeSwitch(e, apply, id));
+    document.addEventListener('click', e => {
+      if (!active || e.target !== document.documentElement) return;
+      const r = btn.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) MH.themeSwitch({ clientX: e.clientX, clientY: e.clientY, currentTarget: btn }, apply, id);
     });
-    vt.finished.finally(() => { delete root.dataset.vfx; });
   };
   MH.themeFx = Object.keys(FX);
 })();

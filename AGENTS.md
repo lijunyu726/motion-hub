@@ -35,6 +35,7 @@
 - **复制代码（代码和提示词一体）**：`fullCode()` 拼一个独立 `.html`：开头一段注释由 `header()` 用 `src/prompts.js` 生成（怎么用、效果、原理、参数、注意、代码结构），后面是 `effects.css` 里 base + 这个效果的 `@css` 段、`core.js`、效果自己的文件。注释里不能出现 `-->`（`header()` 会替换）。源码取自 `src/sources.js`（`npm run sources` 生成并提交），因为 `file://` 下浏览器禁止 `fetch` 读本地文件；取不到时才退回 `fetch`。**改了 `src/effects.css`、`src/core.js` 或 `src/effects/` 后必须重新运行 `npm run sources`**，冒烟测试会检查并在过期时失败。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。CSS 注释里不能出现 `*/`（踩过）。
 - **配色**：黑白朱砂（浅色纸白 + 朱砂红 `#C8281E`，深色纯黑 + 亮红 `#FF3B30`），写在 `effects.css` 的 `:root` / `[data-theme=night]` / `[data-theme=day]` 三处，改配色要三处一起改。
 
+- **深浅切换点一次切一次**：舞台演示每次点击先把上一次动画取消并落定状态再开始；整页用 `MH.bindThemeToggle`，上一次 View Transition 没播完就 `skipTransition()`。过渡期间点击会落在 `<html>` 上（快照盖住了整页），所以要在 document 上按坐标判断是否点在按钮上。
 - **实验台的深浅开关固定用圆形揭开**：不要让它跟着舞台上选中的过渡效果变（作者认为那像是整站被效果带着走）。
 - **实验台而不是预览墙**：同一时间只运行一个效果（切换时 `destroy` 旧的），避免二十多个画布同时跑。
 - **幽灵光标**（`MH.ghostAt`）：2.5 秒没有真实指针时接管，沿利萨如曲线移动，每 4.2 秒替有 `down` 的效果“点”一下。片头设 `ghostClick: false`，否则会被不断重播。

@@ -133,7 +133,7 @@ ${list(notes)}
 async function fullCode(e) {
   const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read('src/effects/' + e.file)]);
   const run = e.cat === '过渡'
-    ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();\n// 整页深浅切换（View Transitions）：\n// button.onclick = ev => MH.themeSwitch(ev, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}');`
+    ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();\n// 整页深浅切换（View Transitions，点一次切一次）：\n// MH.bindThemeToggle(button, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}');`
     : `MH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();`;
   return `<!doctype html>
 ${header(e)}
@@ -194,13 +194,12 @@ copyWith('copy', fullCode, '已复制：存成 .html 能运行，交给 AI 能�
   const dark = () => document.documentElement.dataset.theme === 'night';
   const label = () => { const t = dark() ? '切换到浅色模式' : '切换到深色模式'; btn.classList.toggle('moon', !dark()); btn.title = t; btn.setAttribute('aria-label', t); };
   label();
-  btn.addEventListener('click', ev => {
-    MH.themeSwitch(ev, () => {
-      if (dark()) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = 'night';
-      try { localStorage.setItem('mh-theme', dark() ? 'night' : 'day'); } catch (e) {}
-      label();
-    }, 'circle'); // 实验台自己的深浅切换固定用圆形揭开，不跟着舞台上选中的效果变
-  });
+  // 实验台自己的深浅切换固定用圆形揭开，不跟着舞台上选中的效果变；点一次切一次，不用等过渡播完
+  MH.bindThemeToggle(btn, () => {
+    if (dark()) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = 'night';
+    try { localStorage.setItem('mh-theme', dark() ? 'night' : 'day'); } catch (e) {}
+    label();
+  }, 'circle');
 })();
 
 select(location.hash.slice(1), false);
