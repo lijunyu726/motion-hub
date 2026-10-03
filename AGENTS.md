@@ -31,7 +31,7 @@
 ## 关键设计决策和踩坑
 
 - **复制完整代码**：`index.html` 里的 `fullCode()` 用 `fetch` 读 `effects.css`、`core.js` 和效果所在文件，拼成一个能单独打开的 `.html`。`file://` 下浏览器禁止读取，所以按钮会禁用、面板只显示接入方式；验证要通过 `python3 -m http.server`。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。
-- **配色试选（临时）**：`effects.css` 里有 4 套候选 `[data-palette=…]`，`index.html` 末尾有试选面板（`.try`，样式在 `hub.css` 末尾），选择存在 localStorage `mh-palette` / `mh-toggle`。定稿后：把选中的配色写进 `:root` / `[data-theme=night]` / `[data-theme=day]`，删掉其它候选、试选面板和 `<head>` 里读取 `mh-palette` 的两行。
+- **配色**：黑白朱砂（浅色纸白 + 朱砂红 `#C8281E`，深色纯黑 + 亮红 `#FF3B30`），写在 `effects.css` 的 `:root` / `[data-theme=night]` / `[data-theme=day]` 三处，改配色要三处一起改。
 
 - **实验台而不是预览墙**：同一时间只运行一个效果（切换时 `destroy` 旧的），避免二十多个画布同时跑。
 - **幽灵光标**（`MH.ghostAt`）：2.5 秒没有真实指针时接管，沿利萨如曲线移动，每 4.2 秒替有 `down` 的效果“点”一下。片头设 `ghostClick: false`，否则会被不断重播。
@@ -48,7 +48,7 @@
 
 - 不提交任何密钥、`.env`、个人数据。页面没有网络请求，也不应加入统计或第三方脚本。
 - 页脚的 ICP 备案号是部署到个人子域名的合规要求，不要删除。
-- 仓库是私有的，许可证为“保留所有权利”（`LICENSE`、`package.json` 的 `UNLICENSED`）。不要改成开源许可证，也不要改仓库可见性；以后公开的是另建的展示仓库。
+- 许可证 MIT。仓库目前私有，不要擅自改可见性，公开由作者决定。
 
 ## 回退
 

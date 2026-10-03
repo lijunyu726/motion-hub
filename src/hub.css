@@ -58,13 +58,3 @@ i{font-family:var(--latin)}
 }
 
 
-/* ───── 试选面板（临时，定稿后删除） ───── */
-.try{position:fixed;right:16px;bottom:56px;z-index:50;width:250px;padding:12px;border:1px solid var(--ink);background:var(--paper);font-size:12px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
-.try>b{display:block;font:600 12px/1 var(--sans);letter-spacing:.1em;color:var(--dim)}
-.try-p{margin-top:10px;display:flex;flex-direction:column;gap:4px}
-.try-p button{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--rule);background:none;cursor:pointer;font:500 13px/1 var(--sans);text-align:left}
-.try-p button.on{border-color:var(--accent)}
-.try-p i{width:12px;height:12px;border-radius:50%}
-.try label{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font:500 12px/1 var(--sans);color:var(--dim)}
-.try select{padding:4px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font:inherit}
-@media (max-width:860px){.try{left:16px;right:16px;width:auto;bottom:16px}}

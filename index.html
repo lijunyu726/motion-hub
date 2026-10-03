@@ -9,10 +9,7 @@
 <script>
   // 先定深浅色再渲染，避免闪一下：本地记住的选择优先，否则跟随系统
   (() => { let m = null; try { m = localStorage.getItem('mh-theme'); } catch (e) {}
-    if ((m || (matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day')) === 'night') document.documentElement.dataset.theme = 'night';
-    // 试选期：记住选的配色（选定后改成固定值，删掉这两行）
-    let p = null; try { p = localStorage.getItem('mh-palette'); } catch (e) {}
-    if (p) document.documentElement.dataset.palette = p; })();
+    if ((m || (matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day')) === 'night') document.documentElement.dataset.theme = 'night'; })();
 </script>
 <link rel="stylesheet" href="src/effects.css">
 <link rel="stylesheet" href="src/hub.css">
@@ -49,7 +46,7 @@
   </main>
 </div>
 <footer class="ft-bar">
-  <span>© 2026 LJY · 保留所有权利 · 原生 JavaScript，无依赖</span>
+  <span>MIT License · © 2026 LJY · 原生 JavaScript，无依赖</span>
   <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">鲁ICP备2026056774号-1</a></span>
 </footer>
 <script>
@@ -85,13 +82,12 @@ const SRC = {};
 const read = f => SRC[f] || (SRC[f] = fetch(f).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }));
 async function fullCode(e) {
   const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read(`src/effects/${FILE[e.cat]}.js`)]);
-  const pal = document.documentElement.dataset.palette;
   const run = e.cat === '过渡'
     ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();\n// 整页深浅切换（View Transitions）：\n// button.onclick = ev => MH.themeSwitch(ev, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}');`
     : `MH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();`;
   return `<!doctype html>
-<!-- ${e.name} · Motion Hub · © 2026 LJY -->
-<html lang="zh-CN"${pal ? ` data-palette="${pal}"` : ''}>
+<!-- ${e.name} · Motion Hub · MIT License · © 2026 LJY -->
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -160,29 +156,8 @@ $('copy').addEventListener('click', async () => {
   });
 })();
 
-// ───── 试选面板（临时）：比较候选配色、选深浅开关用的过渡。定稿后删掉这一段和 hub.css 里的 .try ─────
-const PALETTES = [
-  ['', '现在', '#E3402A', '#D4FF3A'], ['signal', '信号橙', '#FF4F00', '#FF6A1A'], ['phosphor', '磷光绿', '#0E9F5A', '#39FF88'],
-  ['amber', '琥珀终端', '#D97F00', '#FFB000'], ['cinnabar', '黑白朱砂', '#C8281E', '#FF3B30'],
-];
-const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
-function toggleFx() { return store.get('mh-toggle') || 'dots'; }
-(() => {
-  const el = document.createElement('div'); el.className = 'try';
-  const names = Object.fromEntries(list.filter(e => e.cat === '过渡').map(e => [e.id.replace('theme-', ''), e.name]));
-  el.innerHTML = `<b>试选 · 定稿后删除</b><div class="try-p">${PALETTES.map(([k, n, a, b]) => `<button type="button" data-k="${k}"><i style="background:${a}"></i><i style="background:${b}"></i>${n}</button>`).join('')}</div>
-    <label>开关过渡 <select>${MH.themeFx.map(k => `<option value="${k}">${names[k]}</option>`).join('')}</select></label>`;
-  document.body.append(el);
-  const paint = () => el.querySelectorAll('.try-p button').forEach(b => b.classList.toggle('on', b.dataset.k === (document.documentElement.dataset.palette || '')));
-  el.querySelector('.try-p').addEventListener('click', ev => {
-    const b = ev.target.closest('button'); if (!b) return;
-    const k = b.dataset.k;
-    MH.themeSwitch(ev, () => { if (k) document.documentElement.dataset.palette = k; else delete document.documentElement.dataset.palette; store.set('mh-palette', k); paint(); }, toggleFx());
-  });
-  const sel = el.querySelector('select'); sel.value = toggleFx();
-  sel.addEventListener('change', () => store.set('mh-toggle', sel.value));
-  paint();
-})();
+// 深浅开关的默认过渡：点阵扩散
+const toggleFx = () => 'dots';
 
 select(location.hash.slice(1), false);
 </script>

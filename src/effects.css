@@ -1,23 +1,13 @@
-/* Motion Hub 效果样式：配色变量 + 各效果用到的样式 + 整页过渡遮罩。“复制代码”会把这个文件一起带上。 */
+/* Motion Hub 效果样式：配色变量（黑白朱砂：浅色纸白 + 朱砂红，深色纯黑 + 亮红）+ 各效果用到的样式 + 整页过渡遮罩。“复制完整代码”会把这个文件一起带上。 */
 :root{
-  --paper:#F2EDE3;--paper2:#EAE3D6;--ink:#171411;--body:#3A332B;--dim:#776E62;--rule:#D1C7B7;--accent:#E3402A;--on-accent:#fff;
+  --paper:#FAFAF7;--paper2:#EFEFEA;--ink:#0A0A0A;--body:#2B2B2B;--dim:#7B7B78;--rule:#DCDCD6;--accent:#C8281E;--on-accent:#fff;
   --serif:"Songti SC","STSong","Noto Serif SC",serif;
   --sans:"PingFang SC","Helvetica Neue","Noto Sans SC",sans-serif;
   --latin:"Iowan Old Style",Palatino,Georgia,serif;
   --mono:"SF Mono",Menlo,monospace;
 }
-[data-theme="night"]{--paper:#111214;--paper2:#1A1B1E;--ink:#EDEAE3;--body:#C9C5BC;--dim:#8A867E;--rule:#2E2F33;--accent:#D4FF3A;--on-accent:#111}
-[data-theme="day"]{--paper:#F2EDE3;--paper2:#EAE3D6;--ink:#171411;--body:#3A332B;--dim:#776E62;--rule:#D1C7B7;--accent:#E3402A;--on-accent:#fff}
-/* ───── 候选配色（试选用，选定后只保留一套）：html 上的 data-palette 决定；小页面自己的 data-theme 也跟着这套 ───── */
-[data-palette="signal"],[data-palette="signal"] [data-theme="day"]{--paper:#F3F3F1;--paper2:#E9E9E6;--ink:#111111;--body:#33332F;--dim:#76767A;--rule:#D6D6D2;--accent:#FF4F00;--on-accent:#fff}
-[data-palette="signal"][data-theme="night"],[data-palette="signal"] [data-theme="night"]{--paper:#0E0E10;--paper2:#18181B;--ink:#F2F2F0;--body:#C9C9C6;--dim:#86868B;--rule:#2A2A2E;--accent:#FF6A1A;--on-accent:#111}
-[data-palette="phosphor"],[data-palette="phosphor"] [data-theme="day"]{--paper:#EEF1EC;--paper2:#E3E8E0;--ink:#10140F;--body:#2E382C;--dim:#6B7469;--rule:#CCD3C9;--accent:#0E9F5A;--on-accent:#fff}
-[data-palette="phosphor"][data-theme="night"],[data-palette="phosphor"] [data-theme="night"]{--paper:#070B09;--paper2:#0D1310;--ink:#D8F5E2;--body:#A9C9B4;--dim:#5E7A68;--rule:#1C2A22;--accent:#39FF88;--on-accent:#06110A}
-[data-palette="amber"],[data-palette="amber"] [data-theme="day"]{--paper:#F5F0E6;--paper2:#ECE4D4;--ink:#1A1712;--body:#3B342A;--dim:#7A7062;--rule:#D9CFBE;--accent:#D97F00;--on-accent:#fff}
-[data-palette="amber"][data-theme="night"],[data-palette="amber"] [data-theme="night"]{--paper:#100D08;--paper2:#1A150E;--ink:#F4E7CF;--body:#D3C4A8;--dim:#8D8170;--rule:#2C2519;--accent:#FFB000;--on-accent:#140F05}
-[data-palette="cinnabar"],[data-palette="cinnabar"] [data-theme="day"]{--paper:#FAFAF7;--paper2:#EFEFEA;--ink:#0A0A0A;--body:#2B2B2B;--dim:#7B7B78;--rule:#DCDCD6;--accent:#C8281E;--on-accent:#fff}
-[data-palette="cinnabar"][data-theme="night"],[data-palette="cinnabar"] [data-theme="night"]{--paper:#000000;--paper2:#0F0F0F;--ink:#FFFFFF;--body:#CFCFCF;--dim:#808080;--rule:#262626;--accent:#FF3B30;--on-accent:#fff}
-
+[data-theme="night"]{--paper:#000000;--paper2:#0F0F0F;--ink:#FFFFFF;--body:#CFCFCF;--dim:#808080;--rule:#262626;--accent:#FF3B30;--on-accent:#fff}
+[data-theme="day"]{--paper:#FAFAF7;--paper2:#EFEFEA;--ink:#0A0A0A;--body:#2B2B2B;--dim:#7B7B78;--rule:#DCDCD6;--accent:#C8281E;--on-accent:#fff}
 /* ───── 深浅开关（和“太阳月亮开关”同一套图形） ───── */
 .sm{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid currentColor;background:none;cursor:pointer;color:var(--ink)}
 .sm svg{width:18px;height:18px;overflow:visible}
