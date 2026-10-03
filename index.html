@@ -187,7 +187,7 @@ const copyWith = (id, make, ok) => $(id).addEventListener('click', async () => {
 });
 copyWith('copy', fullCode, '已复制：存成 .html 能运行，交给 AI 能改');
 
-// 深浅开关：图标和“太阳月亮开关”同一套；过渡用当前选中的那一种（选中的不是过渡时用点阵扩散）
+// 深浅开关：图标和“太阳月亮开关”同一套；过渡固定为圆形揭开
 (() => {
   const btn = $('mode'), rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<line x1="12" y1="2.5" x2="12" y2="4.5" transform="rotate(${a} 12 12)"/>`).join('');
   btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><mask id="mode-mask"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><circle class="bite" cx="28" cy="2" r="7.5" fill="#000"/></mask><circle class="core" cx="12" cy="12" r="5" fill="currentColor" mask="url(#mode-mask)"/><g class="rays" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">${rays}</g></svg>`;
@@ -195,17 +195,13 @@ copyWith('copy', fullCode, '已复制：存成 .html 能运行，交给 AI 能�
   const label = () => { const t = dark() ? '切换到浅色模式' : '切换到深色模式'; btn.classList.toggle('moon', !dark()); btn.title = t; btn.setAttribute('aria-label', t); };
   label();
   btn.addEventListener('click', ev => {
-    const fx = cur && cur.cat === '过渡' ? cur.id.replace('theme-', '') : toggleFx();
     MH.themeSwitch(ev, () => {
       if (dark()) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = 'night';
       try { localStorage.setItem('mh-theme', dark() ? 'night' : 'day'); } catch (e) {}
       label();
-    }, fx);
+    }, 'circle'); // 实验台自己的深浅切换固定用圆形揭开，不跟着舞台上选中的效果变
   });
 })();
-
-// 深浅开关的默认过渡：点阵扩散
-const toggleFx = () => 'dots';
 
 select(location.hash.slice(1), false);
 </script>
