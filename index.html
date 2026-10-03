@@ -50,7 +50,7 @@
         <div class="tech" id="tech"></div>
         <div class="act"><button id="reset" type="button">↻ 重置</button><button id="full" type="button">⛶ 全屏</button></div>
       </div>
-      <div class="use"><pre id="use"></pre><div class="copies"><button class="copy p" id="copy" type="button">复制提示词 + 代码</button><button class="copy" id="copy-code" type="button">只复制代码</button></div></div>
+      <div class="use"><pre id="use"></pre><div class="copies"><button class="copy p" id="copy" type="button">复制代码</button></div></div>
     </section>
   </main>
 </div>
@@ -97,14 +97,46 @@ const cssFor = (css, keys) => {
   const parts = {}; css.replace(/\/\* @css (\S+) \*\/\n([\s\S]*?)(?=\/\* @css |$)/g, (m, k, body) => { parts[k] = body.trim(); });
   return ['base', ...keys].map(k => parts[k] || '').filter(Boolean).join('\n\n');
 };
-// 只复制代码：一个能单独打开的 .html，只带这个效果的文件和它用到的样式
+// 复制代码：一个能单独打开的 .html，只带这个效果的文件和它用到的样式；
+// 文件开头的注释就是给 AI 的提示词（效果、原理、参数、注意事项、代码结构），代码和说明是一份东西。
+function header(e) {
+  const P = (window.MH_PROMPTS || {})[e.id] || { look: e.desc, how: [], params: [], notes: [] };
+  const list = a => a.map(x => `  - ${x}`).join('\n');
+  const notes = [...P.notes, '颜色都来自 CSS 变量（paper / ink / dim / rule / accent），换成项目自己的颜色即可。', '要处理 prefers-reduced-motion：系统要求减少动态效果时只显示静止画面。', '组件卸载时要停掉动画循环、移除事件监听（mount 返回的 destroy）。'];
+  return `<!--
+  「${e.name}」 · Motion Hub · MIT License
+
+  【怎么用】
+  这个文件可以直接双击打开，先看效果。
+  想放进自己的项目：把整个文件交给 AI（Claude / ChatGPT / Cursor 等），再说一句你的技术栈和想要的调整，
+  例如“把这个效果改写成 React 组件，放在首屏当背景，颜色换成我的品牌色”。下面的说明就是写给它看的。
+
+  【效果】
+  ${P.look}
+
+  【实现原理】
+${list(P.how)}
+
+  【可以调的参数】
+${list(P.params)}
+
+  【注意】
+${list(notes)}
+
+  【代码结构】
+  - <style>：配色变量和这个效果用到的样式
+  - 第一段 <script>：MH 核心（注册表、噪声、缓动；canvasHost 负责画布尺寸、指针坐标、动画循环和暂停）
+  - 第二段 <script>：效果本身，核心是 MH.register 里的 mount(el, opts)，返回 { pause, resume, destroy }
+  - 最后一段 <script>：把效果挂到 #fx 上并启动
+-->`.replace(/-->(?=[\s\S]*-->$)/g, '->');
+}
 async function fullCode(e) {
   const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read('src/effects/' + e.file)]);
   const run = e.cat === '过渡'
     ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();\n// 整页深浅切换（View Transitions）：\n// button.onclick = ev => MH.themeSwitch(ev, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}');`
     : `MH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();`;
   return `<!doctype html>
-<!-- ${e.name} · Motion Hub · MIT License -->
+${header(e)}
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -131,41 +163,9 @@ ${run}
 </html>
 `;
 }
-// 提示词 + 代码：给 AI 的一段 Markdown，开头留两处让使用者填，后面是原理、参数、注意事项和参考实现
-async function promptText(e) {
-  const P = (window.MH_PROMPTS || {})[e.id] || { look: e.desc, how: [], params: [], notes: [] };
-  const list = a => a.map(x => `- ${x}`).join('\n');
-  return `# 在我的项目里加入「${e.name}」效果
-
-请参考下面的说明和可以直接运行的参考代码，把这个效果加到我的项目里。可以按我的技术栈改写，不必照搬结构。
-
-- 我的项目：（填你的技术栈，例如 React + Tailwind / Vue 3 / Next.js / 纯 HTML）
-- 我想要的调整：（可选，例如换成品牌色、只放在首屏、慢一点、去掉点击效果）
-
-## 效果
-${P.look}
-
-## 实现原理
-${list(P.how)}
-
-## 可以调的参数
-${list(P.params)}
-
-## 注意
-${list([...P.notes, '颜色都来自 CSS 变量 --paper / --ink / --dim / --rule / --accent，换成项目自己的颜色即可。', '要处理 prefers-reduced-motion：系统要求减少动态效果时只显示静止画面。', '组件卸载时要停掉动画循环、移除事件监听（参考代码里的 destroy）。'])}
-
-## 参考实现
-单文件，存成 .html 直接打开就能看到效果。核心在 MH.register 里的 mount 函数；MH.canvasHost 负责画布尺寸、指针坐标和动画循环。
-
-\`\`\`html
-${await fullCode(e)}\`\`\`
-
-来源：Motion Hub · MIT License
-`;
-}
 async function showCode(e) {
   $('use').textContent = '正在生成…';
-  try { const t = await promptText(e); if (cur === e) { $('use').textContent = t; document.querySelectorAll('.copies button').forEach(b => b.disabled = false); } }
+  try { const t = await fullCode(e); if (cur === e) { $('use').textContent = t; document.querySelectorAll('.copies button').forEach(b => b.disabled = false); } }
   catch (err) { $('use').textContent = '读取源码失败：' + err.message; document.querySelectorAll('.copies button').forEach(b => b.disabled = true); }
 }
 $('list').addEventListener('click', ev => { const b = ev.target.closest('button[data-id]'); if (b) select(b.dataset.id); });
@@ -185,8 +185,7 @@ const copyWith = (id, make, ok) => $(id).addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(await make(cur)); b.textContent = ok; } catch (e) { b.textContent = '复制失败'; }
   setTimeout(() => b.textContent = t0, 1800);
 });
-copyWith('copy', promptText, '已复制，粘贴给 AI 即可');
-copyWith('copy-code', fullCode, '已复制，存成 .html 就能打开');
+copyWith('copy', fullCode, '已复制：存成 .html 能运行，交给 AI 能改');
 
 // 深浅开关：图标和“太阳月亮开关”同一套；过渡用当前选中的那一种（选中的不是过渡时用点阵扩散）
 (() => {

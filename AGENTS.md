@@ -19,7 +19,7 @@
 3. 画布类效果用 `MH.canvasHost(el, opts, setup)`：它负责建画布、按容器尺寸重设、局部指针坐标、暂停/恢复、主题变化回调和幽灵光标。无画布的交互传 `{ canvas: false }`。
 4. 尺寸按 `h.s`（`MH.scaleOf(W)`，全屏约 1、小尺寸约 0.45）缩放，不要写死像素。
 5. 必须处理 `MH.still()`（系统“减少动态效果”）：只画静止的一帧，不开循环。
-6. 在 `src/prompts.js` 里写这个效果的提示词素材（look / how / params / notes），把踩过的坑写进 notes。
+6. 在 `src/prompts.js` 里写这个效果的说明（look / how / params / notes），复制代码时会写进文件开头的注释；踩过的坑写进 notes。
 7. 效果用到的样式写进 `effects.css`，前面加 `/* @css 名称 */` 标记，并在 `index.html` 的 `CSS_OF` 里登记这个效果需要哪几段。
 8. 运行 `npm run sources` 更新打包的源码，再跑 `npm run smoke`，确认没有错误、没有空白、源码没过期。
 
@@ -32,7 +32,7 @@
 
 ## 关键设计决策和踩坑
 
-- **两种复制**：`fullCode()` 拼一个独立 `.html`：`effects.css` 里 base + 这个效果的 `@css` 段、`core.js`、效果自己的文件。`promptText()` 在前面加上 `src/prompts.js` 的说明，开头留“我的项目 / 我想要的调整”两处给使用者填，末尾附 `fullCode()`。源码取自 `src/sources.js`（`npm run sources` 生成并提交），因为 `file://` 下浏览器禁止 `fetch` 读本地文件；取不到时才退回 `fetch`。**改了 `src/effects.css`、`src/core.js` 或 `src/effects/` 后必须重新运行 `npm run sources`**，冒烟测试会检查并在过期时失败。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。CSS 注释里不能出现 `*/`（踩过：说明文字里写了 `/* @css 名称 */` 把注释提前结束了）。
+- **复制代码（代码和提示词一体）**：`fullCode()` 拼一个独立 `.html`：开头一段注释由 `header()` 用 `src/prompts.js` 生成（怎么用、效果、原理、参数、注意、代码结构），后面是 `effects.css` 里 base + 这个效果的 `@css` 段、`core.js`、效果自己的文件。注释里不能出现 `-->`（`header()` 会替换）。源码取自 `src/sources.js`（`npm run sources` 生成并提交），因为 `file://` 下浏览器禁止 `fetch` 读本地文件；取不到时才退回 `fetch`。**改了 `src/effects.css`、`src/core.js` 或 `src/effects/` 后必须重新运行 `npm run sources`**，冒烟测试会检查并在过期时失败。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。CSS 注释里不能出现 `*/`（踩过）。
 - **配色**：黑白朱砂（浅色纸白 + 朱砂红 `#C8281E`，深色纯黑 + 亮红 `#FF3B30`），写在 `effects.css` 的 `:root` / `[data-theme=night]` / `[data-theme=day]` 三处，改配色要三处一起改。
 
 - **实验台而不是预览墙**：同一时间只运行一个效果（切换时 `destroy` 旧的），避免二十多个画布同时跑。
