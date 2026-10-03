@@ -26,7 +26,8 @@ page.on('console', m => m.type() === 'error' && errors.push(m.text()));
 await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: night ? 'dark' : 'light' }]);
 await page.setViewport(mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 });
 await page.goto('file://' + path.join(root, 'index.html'), { waitUntil: 'load' });
-await page.evaluate(() => localStorage.removeItem('mh-theme'));
+// 默认浅色、不跟随系统；--night 时直接存深色设置
+await page.evaluate(n => { if (n) localStorage.setItem('mh-theme', 'night'); else localStorage.removeItem('mh-theme'); }, night);
 await page.reload({ waitUntil: 'load' });
 
 const ids = await page.evaluate(() => [...document.querySelectorAll('#list button')].map(b => b.dataset.id));

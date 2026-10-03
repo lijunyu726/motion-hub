@@ -7,9 +7,9 @@
 <link rel="icon" href="data:,">
 <meta name="description" content="网页动效合集：背景、深浅切换过渡、拉扯翻页、片头与小交互。原生 JavaScript，无依赖。">
 <script>
-  // 先定深浅色再渲染，避免闪一下：本地记住的选择优先，否则跟随系统
+  // 先定深浅色再渲染，避免闪一下：默认浅色（不跟随系统），用户切过就记住
   (() => { let m = null; try { m = localStorage.getItem('mh-theme'); } catch (e) {}
-    if ((m || (matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day')) === 'night') document.documentElement.dataset.theme = 'night'; })();
+    if (m === 'night') document.documentElement.dataset.theme = 'night'; })();
 </script>
 <link rel="stylesheet" href="src/effects.css">
 <link rel="stylesheet" href="src/hub.css">
@@ -41,7 +41,7 @@
 <div class="bench">
   <aside class="list" id="list" aria-label="效果列表"></aside>
   <main class="main">
-    <div class="stage" id="stage"></div>
+    <div class="stage" id="stage" data-theme="day"><!-- 预览固定浅色，不跟着网站的深浅切换 --></div>
     <section class="info">
       <div>
         <div class="cat" id="cat"></div>

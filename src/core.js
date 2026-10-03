@@ -49,7 +49,8 @@ window.MH = (() => {
   // 从容器读主题色（--paper / --ink / --dim / --rule / --accent）
   function colors(el) {
     const cs = getComputedStyle(el), v = n => cs.getPropertyValue(n).trim();
-    return { paper: v('--paper'), ink: v('--ink'), dim: v('--dim'), rule: v('--rule'), accent: v('--accent'), night: !!el.closest('[data-theme="night"]') };
+    const t = el.closest('[data-theme]');
+    return { paper: v('--paper'), ink: v('--ink'), dim: v('--dim'), rule: v('--rule'), accent: v('--accent'), night: !!t && t.dataset.theme === 'night' };
   }
   // 一段时长 ms 的补间，fn(k) 中 k 从 0 到 1；减少动态效果时直接到终点
   const tween = (ms, fn) => new Promise(res => {
