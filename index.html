@@ -55,10 +55,10 @@ const list = MH.effects.slice().sort((a, b) => CATS.indexOf(a.cat) - CATS.indexO
 $('count').textContent = `${list.length} 个效果 · ${CATS.length} 类`;
 
 // 左侧名单：按分类分组，每类标数量
-let n = 0;
+// 序号在每个分类里从 01 重新开始
 $('list').innerHTML = CATS.map(c => {
   const items = list.filter(e => e.cat === c);
-  return `<h2>${c}<span>${items.length}</span></h2>` + items.map(e => `<button type="button" data-id="${e.id}"><i>${String(++n).padStart(2, '0')}</i>${e.name}</button>`).join('');
+  return `<h2>${c}<span>${items.length}</span></h2>` + items.map((e, i) => `<button type="button" data-id="${e.id}"><i>${String(i + 1).padStart(2, '0')}</i>${e.name}</button>`).join('');
 }).join('');
 
 // 舞台：同一时间只运行一个效果；切换时销毁旧的
