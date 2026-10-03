@@ -89,7 +89,7 @@ window.MH = (() => {
     const onDown = e => { if (e.target.closest('a, button')) return; lastReal = performance.now(); const [x, y] = local(e); api.down && api.down(x, y); };
     el.addEventListener('pointermove', onMove); el.addEventListener('pointerleave', onLeave); el.addEventListener('pointerdown', onDown);
     const mo = new MutationObserver(() => { api.theme && api.theme(); if (!running) api.frame(performance.now()); });
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
     const tick = now => {
       if (!running) return;
       // 缩略图里 2.5 秒没人碰，就让幽灵光标接管；偶尔“点”一下展示点击效果

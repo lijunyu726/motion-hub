@@ -7,7 +7,8 @@
 - **不引入运行时依赖，不加构建步骤。** 页面必须能直接双击 `index.html`（file://）打开。
 - **效果文件是普通 `<script>`，不是 ES 模块。** file:// 下 Chrome 会拦截模块加载，所以全部挂在全局 `window.MH` 上。
 - `package.json` 只有测试用的 `puppeteer-core`（devDependency），不要往页面里引入 npm 包。
-- 颜色只用 CSS 变量 `--paper / --paper2 / --ink / --body / --dim / --rule / --accent / --on-accent`，不在效果里写死颜色（画布通过 `MH.colors(el)` 读变量，并在主题切换时刷新）。
+- 颜色只用 CSS 变量 `--paper / --paper2 / --ink / --body / --dim / --rule / --accent / --on-accent`，不在效果里写死颜色（画布通过 `MH.colors(el)` 读变量，并在 `data-theme` / `data-palette` 变化时刷新）。
+- 样式分两份：`src/effects.css`（配色变量 + 效果样式 + 整页过渡遮罩，会被“复制完整代码”带走）和 `src/hub.css`（只有实验台版式）。效果需要的样式只能写进 `effects.css`。
 
 ## 加一个新效果
 
@@ -29,6 +30,9 @@
 
 ## 关键设计决策和踩坑
 
+- **复制完整代码**：`index.html` 里的 `fullCode()` 用 `fetch` 读 `effects.css`、`core.js` 和效果所在文件，拼成一个能单独打开的 `.html`。`file://` 下浏览器禁止读取，所以按钮会禁用、面板只显示接入方式；验证要通过 `python3 -m http.server`。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。
+- **配色试选（临时）**：`effects.css` 里有 4 套候选 `[data-palette=…]`，`index.html` 末尾有试选面板（`.try`，样式在 `hub.css` 末尾），选择存在 localStorage `mh-palette` / `mh-toggle`。定稿后：把选中的配色写进 `:root` / `[data-theme=night]` / `[data-theme=day]`，删掉其它候选、试选面板和 `<head>` 里读取 `mh-palette` 的两行。
+
 - **实验台而不是预览墙**：同一时间只运行一个效果（切换时 `destroy` 旧的），避免二十多个画布同时跑。
 - **幽灵光标**（`MH.ghostAt`）：2.5 秒没有真实指针时接管，沿利萨如曲线移动，每 4.2 秒替有 `down` 的效果“点”一下。片头设 `ghostClick: false`，否则会被不断重播。
 - **`.info` 固定高度**：否则说明文字长短不同会让舞台高度跳动。
@@ -44,8 +48,14 @@
 
 - 不提交任何密钥、`.env`、个人数据。页面没有网络请求，也不应加入统计或第三方脚本。
 - 页脚的 ICP 备案号是部署到个人子域名的合规要求，不要删除。
+- 仓库是私有的，许可证为“保留所有权利”（`LICENSE`、`package.json` 的 `UNLICENSED`）。不要改成开源许可证，也不要改仓库可见性；以后公开的是另建的展示仓库。
 
 ## 回退
 
 - 每个效果是独立文件 / 独立 `register` 调用，出问题时可以先从 `index.html` 去掉对应 `<script>`，或删掉那个 `register` 块。
 - 用 `git log` / `git revert` 回退，不要改写已推送的历史。
+
+## 推送
+
+- 远程是 `ssh://git@ssh.github.com:443/lijunyu726/motion-hub.git`：当前网络下 GitHub 的 SSH 22 端口不通，走 443。只在本仓库设置，不改全局 git 配置。
+- `docs/` 里的 README 用图由临时脚本截取；改了版式或配色后需要重新截图。
