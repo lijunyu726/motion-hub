@@ -4,7 +4,7 @@
 
 **网页动效合集 · 背景 / 深浅过渡 / 拉扯翻页 / 片头 / 小交互**
 
-原生 JavaScript · 无依赖 · 无构建 · 23 个效果 · MIT
+原生 JavaScript · 无依赖 · 无构建 · 23 个效果
 
 [作者官网 lijunyu.com.cn](https://lijunyu.com.cn) · 在线演示（部署中）
 
@@ -117,6 +117,10 @@ node tools/smoke.mjs --night --mobile
 
 </details>
 
+## 参与
+
+欢迎提 Issue 和 Pull Request，步骤见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
 ## 许可证
 
-[MIT](LICENSE) · 随便用，商用也可以。
+[MIT + Commons Clause](LICENSE)：可以免费用在任何项目里，包括商业项目；但不能把这些效果本身拿去卖（例如打包成付费模板或组件库）。

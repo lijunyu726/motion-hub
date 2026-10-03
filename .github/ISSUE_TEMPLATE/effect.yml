@@ -1,0 +1,16 @@
+name: 新效果建议
+description: 想要一个新的动效，或者给现有效果加选项
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: 想要什么效果
+      description: 可以附参考链接、截图或录屏
+    validations:
+      required: true
+  - type: dropdown
+    id: cat
+    attributes:
+      label: 分类
+      options: [背景, 过渡, 翻页, 片头, 交互, 其他]
