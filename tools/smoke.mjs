@@ -13,6 +13,11 @@ const out = path.join(root, 'scratch', 'smoke'); fs.mkdirSync(out, { recursive: 
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const night = process.argv.includes('--night'), mobile = process.argv.includes('--mobile');
 
+// 打包的源码是否过期：src/sources.js 必须和当前源文件一致（否则“复制完整代码”会给出旧代码）
+const { render } = await import('./build-sources.mjs');
+const stale = fs.readFileSync(path.join(root, 'src/sources.js'), 'utf8') !== render();
+if (stale) console.log('⚠ src/sources.js 已过期，请运行 npm run sources');
+
 const browser = await puppeteer.launch({ executablePath: CHROME });
 const page = await browser.newPage();
 const errors = [];
@@ -52,4 +57,4 @@ const blank = rows.filter(r => r.ink < .2);
 console.log('总数', rows.length, '｜疑似空白', blank.map(r => r.id).join(', ') || '无', '｜错误', errors.length ? errors : '无');
 console.log('横向溢出', await page.evaluate(() => document.documentElement.scrollWidth > innerWidth));
 await browser.close();
-process.exit(errors.length || blank.length ? 1 : 0);
+process.exit(errors.length || blank.length || stale ? 1 : 0);

@@ -19,6 +19,7 @@
 <script src="src/effects/pull.js"></script>
 <script src="src/effects/intro.js"></script>
 <script src="src/effects/ui.js"></script>
+<script src="src/sources.js"></script>
 </head>
 <body>
 <header class="hd">
@@ -77,9 +78,11 @@ function select(id, push = true) {
   if (push && location.hash !== '#' + e.id) history.replaceState(null, '', '#' + e.id);
 }
 // 完整代码：把配色和效果样式、核心、这个效果所在的文件拼成一个能直接打开的 .html。
-// 需要读源文件，所以要通过 http(s) 访问；直接双击 file:// 打开时浏览器不允许读，退回显示接入方式。
+// 源文件内容优先从 src/sources.js（预先打包的字符串）取，所以双击 file:// 打开也能用；取不到再用 fetch。
 const SRC = {};
-const read = f => SRC[f] || (SRC[f] = fetch(f).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }));
+const read = f => SRC[f] || (SRC[f] = window.MH_SOURCES && MH_SOURCES[f] != null
+  ? Promise.resolve(MH_SOURCES[f])
+  : fetch(f).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }));
 async function fullCode(e) {
   const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read(`src/effects/${FILE[e.cat]}.js`)]);
   const run = e.cat === '过渡'
@@ -113,12 +116,11 @@ ${run}
 </html>
 `;
 }
-const embed = e => `<!-- 用本地服务器打开实验台（python3 -m http.server）后，这里会显示完整代码 -->\n<div id="fx" style="height:420px"></div>\n<link rel="stylesheet" href="src/effects.css">\n<script src="src/core.js"><\/script>\n<script src="src/effects/${FILE[e.cat]}.js"><\/script>\n<script>\n  MH.effects.find(e => e.id === '${e.id}')\n    .mount(document.getElementById('fx'), {}).resume();\n<\/script>`;
+const embed = e => `<!-- 正在读取完整代码… -->\n<div id="fx" style="height:420px"></div>\n<link rel="stylesheet" href="src/effects.css">\n<script src="src/core.js"><\/script>\n<script src="src/effects/${FILE[e.cat]}.js"><\/script>\n<script>\n  MH.effects.find(e => e.id === '${e.id}')\n    .mount(document.getElementById('fx'), {}).resume();\n<\/script>`;
 async function showCode(e) {
   $('use').textContent = embed(e);
-  if (location.protocol === 'file:') { $('copy').disabled = true; $('copy').title = '直接双击打开时浏览器不允许读取源文件，请用本地服务器打开'; return; }
   try { const code = await fullCode(e); if (cur === e) { $('use').textContent = code; $('copy').disabled = false; } }
-  catch (err) { $('copy').disabled = location.protocol === 'file:'; }
+  catch (err) { $('copy').disabled = true; }
 }
 $('list').addEventListener('click', ev => { const b = ev.target.closest('button[data-id]'); if (b) select(b.dataset.id); });
 // 上下方向键切换效果；当前是拉扯翻页时，方向键交给它翻页
@@ -135,7 +137,7 @@ $('full').addEventListener('click', () => { const s = $('stage'); document.fulls
 $('copy').addEventListener('click', async () => {
   const b = $('copy');
   try { await navigator.clipboard.writeText(await fullCode(cur)); b.textContent = '已复制，可存成 .html 打开'; }
-  catch (e) { b.textContent = location.protocol === 'file:' ? '请用本地服务器打开后再复制' : '复制失败'; }
+  catch (e) { b.textContent = '复制失败'; }
   setTimeout(() => b.textContent = '复制完整代码', 1800);
 });
 

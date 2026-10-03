@@ -62,7 +62,7 @@
 python3 -m http.server 8080      # 访问 http://localhost:8080
 ```
 
-直接双击 `index.html` 也能看全部效果；只有“复制完整代码”需要通过本地服务器打开（浏览器不允许 `file://` 页面读取源文件）。网址可以带上效果 id 直接定位，例如 `#theme-dots`。
+直接双击 `index.html` 也能用，包括“复制完整代码”。网址可以带上效果 id 直接定位，例如 `#theme-dots`。
 
 <details>
 <summary><b>目录结构</b></summary>
@@ -72,6 +72,7 @@ index.html              实验台
 src/core.js             注册表 + 公共工具（噪声、缓动、画布宿主、幽灵光标）
 src/effects.css         配色变量 + 各效果样式 + 整页过渡遮罩
 src/hub.css             实验台版式
+src/sources.js          打包好的源码字符串（“复制完整代码”用，npm run sources 生成）
 src/effects/
   backgrounds.js        背景 5 个
   transitions.js        深浅过渡 11 个 + MH.themeSwitch
@@ -79,6 +80,7 @@ src/effects/
   intro.js              点阵拼字片头
   ui.js                 小交互 5 个
 tools/smoke.mjs         冒烟测试
+tools/build-sources.mjs 生成 src/sources.js
 docs/                   README 用图
 ```
 

@@ -19,7 +19,7 @@
 3. 画布类效果用 `MH.canvasHost(el, opts, setup)`：它负责建画布、按容器尺寸重设、局部指针坐标、暂停/恢复、主题变化回调和幽灵光标。无画布的交互传 `{ canvas: false }`。
 4. 尺寸按 `h.s`（`MH.scaleOf(W)`，全屏约 1、小尺寸约 0.45）缩放，不要写死像素。
 5. 必须处理 `MH.still()`（系统“减少动态效果”）：只画静止的一帧，不开循环。
-6. 跑一遍 `npm run smoke`，确认没有错误、没有空白。
+6. 运行 `npm run sources` 更新打包的源码，再跑 `npm run smoke`，确认没有错误、没有空白、源码没过期。
 
 ## 验证
 
@@ -30,7 +30,7 @@
 
 ## 关键设计决策和踩坑
 
-- **复制完整代码**：`index.html` 里的 `fullCode()` 用 `fetch` 读 `effects.css`、`core.js` 和效果所在文件，拼成一个能单独打开的 `.html`。`file://` 下浏览器禁止读取，所以按钮会禁用、面板只显示接入方式；验证要通过 `python3 -m http.server`。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。
+- **复制完整代码**：`index.html` 里的 `fullCode()` 把 `effects.css`、`core.js` 和效果所在文件拼成一个能单独打开的 `.html`。源码取自 `src/sources.js`（`npm run sources` 由 `tools/build-sources.mjs` 生成并提交），因为 `file://` 下浏览器禁止 `fetch` 读本地文件；取不到时才退回 `fetch`。**改了 `src/` 下被打包的文件后必须重新运行 `npm run sources`**，冒烟测试会检查并在过期时失败。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。
 - **配色**：黑白朱砂（浅色纸白 + 朱砂红 `#C8281E`，深色纯黑 + 亮红 `#FF3B30`），写在 `effects.css` 的 `:root` / `[data-theme=night]` / `[data-theme=day]` 三处，改配色要三处一起改。
 
 - **实验台而不是预览墙**：同一时间只运行一个效果（切换时 `destroy` 旧的），避免二十多个画布同时跑。
