@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const FILES = ['src/effects.css', 'src/core.js', 'src/effects/backgrounds.js', 'src/effects/transitions.js', 'src/effects/pull.js', 'src/effects/intro.js', 'src/effects/ui.js'];
+export const FILES = ['src/effects.css', 'src/core.js', ...fs.readdirSync(path.join(root, 'src/effects')).filter(f => f.endsWith('.js')).sort().map(f => 'src/effects/' + f)];
 
 export function render() {
   const map = Object.fromEntries(FILES.map(f => [f, fs.readFileSync(path.join(root, f), 'utf8')]));

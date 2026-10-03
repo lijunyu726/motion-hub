@@ -1,4 +1,5 @@
-/* Motion Hub 效果样式：配色变量（黑白朱砂：浅色纸白 + 朱砂红，深色纯黑 + 亮红）+ 各效果用到的样式 + 整页过渡遮罩。“复制完整代码”会把这个文件一起带上。 */
+/* @css base */
+/* Motion Hub 效果样式：配色变量（黑白朱砂：浅色纸白 + 朱砂红，深色纯黑 + 亮红）+ 各效果用到的样式 + 整页过渡遮罩。按“@css 名称”标记分段，复制代码时只带用到的段。 */
 :root{
   --paper:#FAFAF7;--paper2:#EFEFEA;--ink:#0A0A0A;--body:#2B2B2B;--dim:#7B7B78;--rule:#DCDCD6;--accent:#C8281E;--on-accent:#fff;
   --serif:"Songti SC","STSong","Noto Serif SC",serif;
@@ -8,6 +9,7 @@
 }
 [data-theme="night"]{--paper:#000000;--paper2:#0F0F0F;--ink:#FFFFFF;--body:#CFCFCF;--dim:#808080;--rule:#262626;--accent:#FF3B30;--on-accent:#fff}
 [data-theme="day"]{--paper:#FAFAF7;--paper2:#EFEFEA;--ink:#0A0A0A;--body:#2B2B2B;--dim:#7B7B78;--rule:#DCDCD6;--accent:#C8281E;--on-accent:#fff}
+/* @css sm */
 /* ───── 深浅开关（和“太阳月亮开关”同一套图形） ───── */
 .sm{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid currentColor;background:none;cursor:pointer;color:var(--ink)}
 .sm svg{width:18px;height:18px;overflow:visible}
@@ -19,10 +21,13 @@
 .sm.moon .rays{transform:rotate(-45deg) scale(.4);opacity:0}
 .sm:hover{color:var(--accent)}
 
+/* @css canvas */
 /* ───── 效果共用 ───── */
 .mh-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* @css ui-center */
 .ui-center{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:14px}
 
+/* @css tt */
 /* 深浅过渡的小页面 */
 .tt{position:absolute;inset:0;overflow:hidden;perspective:1400px;background:#0b0b0c;cursor:pointer}
 .tt-scene{position:absolute;inset:0;background:var(--paper) radial-gradient(circle,color-mix(in srgb,var(--dim) 45%,transparent) 1.1px,transparent 1.6px) 0 0/22px 22px;color:var(--ink);backface-visibility:hidden}
@@ -40,6 +45,7 @@
 .tt-scene[data-fx="halftone"]{-webkit-mask-image:radial-gradient(circle,#000 var(--vr),transparent calc(var(--vr) + .5px));-webkit-mask-size:var(--tile) var(--tile);mask-image:radial-gradient(circle,#000 var(--vr),transparent calc(var(--vr) + .5px));mask-size:var(--tile) var(--tile)}
 .tt-scene[data-fx="soft"]{-webkit-mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--soft)),transparent var(--vr));mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--soft)),transparent var(--vr))}
 
+/* @css vfx */
 /* 整页深浅切换（MH.themeSwitch，View Transitions） */
 [data-vfx]:not([data-vfx="fade"])::view-transition-old(root),[data-vfx]:not([data-vfx="fade"])::view-transition-new(root){animation:none;mix-blend-mode:normal}
 [data-vfx="dots"]::view-transition-new(root){
@@ -53,6 +59,7 @@
 [data-vfx="flip"]::view-transition-group(root){background:#0b0b0c}
 [data-vfx="flip"]::view-transition-old(root),[data-vfx="flip"]::view-transition-new(root){backface-visibility:hidden}
 
+/* @css pd */
 /* 拉扯翻页 */
 .pd{position:absolute;inset:0;overflow:hidden;user-select:none;-webkit-user-select:none;cursor:grab}
 .pd:active{cursor:grabbing}
@@ -66,11 +73,13 @@
 .pd-band{position:absolute;left:0;width:100%;overflow:hidden;transform-origin:0 0;will-change:transform}
 .pd-band>.pd-slide{display:flex}
 
+/* @css sm-stage */
 /* 太阳月亮开关（舞台版，大号） */
 .ui-center .sm{width:22cqh;height:22cqh;border-width:2px}
 .ui-center .sm svg{width:11cqh;height:11cqh}
 .sm-tip{font:500 12px/1 var(--mono);letter-spacing:.2em;color:var(--dim)}
 
+/* @css gc */
 /* 边框高光卡片 */
 .gc-wrap{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:3cqw;align-items:center;padding:0 7cqw;perspective:900px}
 .gc{position:relative;aspect-ratio:3/4;padding:3cqw;border:1px solid var(--rule);background:var(--paper);display:flex;flex-direction:column;transition:transform .5s cubic-bezier(.3,.8,.2,1)}
@@ -80,11 +89,13 @@
 .gc b{margin-top:auto;font:900 3.2cqw/1.2 var(--serif)}
 .gc em{margin-top:1cqw;font:500 1.6cqw/1 var(--sans);font-style:normal;color:var(--dim)}
 
+/* @css sc */
 /* 乱码落定 */
 .sc{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:2.4cqh;padding:0 8cqw}
 .sc-w{font:600 8cqh/1.1 var(--mono);letter-spacing:.04em;color:var(--dim);transition:color .2s;white-space:nowrap}
 .sc-w.hot{color:var(--accent)}
 
+/* @css ft */
 /* 跟随信息卡 */
 .ft{position:absolute;inset:0;padding:8cqh 8cqw;display:flex;flex-direction:column;justify-content:center}
 .ft-row{display:flex;gap:3cqw;align-items:baseline;padding:2.4cqh 0;border-top:1px solid var(--rule)}
@@ -97,6 +108,7 @@
 .ft-tip em{display:block;font:500 11px/1 var(--mono);font-style:normal;letter-spacing:.1em;color:var(--accent)}
 .ft-tip i{display:block;margin-top:8px;font:500 12px/1.5 var(--mono);font-style:normal;color:var(--body)}
 
+/* @css pl */
 /* 校验链 */
 .pl{position:absolute;left:8cqw;right:8cqw;top:50%;transform:translateY(-50%)}
 .pl svg{display:block;width:100%;height:90px;overflow:visible}

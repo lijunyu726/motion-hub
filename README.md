@@ -20,7 +20,7 @@
 
 - **左边**是全部效果的名单，按分类编号；
 - **右边的舞台**全尺寸实时运行当前效果，没人操作时有一个“幽灵光标”自己演示，一动鼠标就交还给你；
-- **下面**是说明、用到的技术，以及一键复制的完整代码（存成 `.html` 就能打开）。
+- **下面**是说明、用到的技术，以及两个复制按钮：**复制提示词 + 代码**、**只复制代码**。
 
 右上角的深浅开关本身也是演示：正在看哪一种过渡，整页就用哪一种切换。
 
@@ -56,29 +56,40 @@
 - **片头是纯函数**：画面完全由时间 `t` 决定，可以随时跳到结尾、重播、在任意尺寸重画最后一帧，最后一帧直接当首屏背景“定格”。
 - **深浅过渡两套实现**：舞台里叠两层小页面，用 WAAPI 做动画，任何尺寸都能跑；整页用 View Transitions。两者共用同一组形状函数。
 
-## 本地运行
+## 在你的项目里用
 
-```bash
-python3 -m http.server 8080      # 访问 http://localhost:8080
+在实验台里选中一个效果，点舞台下方的按钮：
+
+**复制提示词 + 代码**（推荐）：复制出来的是一段写给 AI 的说明，直接粘贴进 Claude、ChatGPT、Cursor 等工具：
+
+```markdown
+# 在我的项目里加入「等高线」效果
+- 我的项目：（填你的技术栈，例如 React + Tailwind / Vue 3 / 纯 HTML）
+- 我想要的调整：（可选，例如换成品牌色、只放在首屏、慢一点）
+
+## 效果 / 实现原理 / 可以调的参数 / 注意
+……
+## 参考实现
+（可以直接运行的单文件代码）
 ```
 
-直接双击 `index.html` 也能用，包括“复制完整代码”。网址可以带上效果 id 直接定位，例如 `#theme-dots`。
+填上你的技术栈和想要的改动，AI 会按你的项目结构改写。原理、参数和踩过的坑都写在里面，比只给代码更容易改对。
+
+**只复制代码**：一个独立的 `.html` 文件，只包含这个效果本身和它用到的样式，存下来双击就能运行，也可以直接把里面的函数搬进自己的项目。
+
+颜色全部来自 CSS 变量 `--paper / --ink / --dim / --rule / --accent`，换成你自己的配色即可。
 
 <details>
 <summary><b>目录结构</b></summary>
 
 ```
-index.html              实验台
+index.html              实验台（直接双击打开即可）
 src/core.js             注册表 + 公共工具（噪声、缓动、画布宿主、幽灵光标）
-src/effects.css         配色变量 + 各效果样式 + 整页过渡遮罩
+src/effects.css         配色变量 + 各效果样式，按 @css 标记分段
 src/hub.css             实验台版式
-src/sources.js          打包好的源码字符串（“复制完整代码”用，npm run sources 生成）
-src/effects/
-  backgrounds.js        背景 5 个
-  transitions.js        深浅过渡 11 个 + MH.themeSwitch
-  pull.js               拉扯翻页
-  intro.js              点阵拼字片头
-  ui.js                 小交互 5 个
+src/effects/            一个效果一个文件（点阵和安静点阵共用 dots.js，11 种过渡共用 transitions.js）
+src/prompts.js          每个效果的提示词素材：效果、原理、参数、注意事项
+src/sources.js          打包好的源码字符串（复制代码用，npm run sources 生成）
 tools/smoke.mjs         冒烟测试
 tools/build-sources.mjs 生成 src/sources.js
 docs/                   README 用图

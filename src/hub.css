@@ -39,8 +39,12 @@ i{font-family:var(--latin)}
 .info .act button:hover{border-color:var(--accent);color:var(--accent)}
 .use{position:relative}
 .use pre{height:100%;max-height:188px;overflow:auto;padding:14px 16px;background:var(--paper2);border:1px solid var(--rule);font:500 12px/1.65 var(--mono);color:var(--body);white-space:pre}
-.use .copy{position:absolute;right:8px;top:8px;padding:4px 8px;border:1px solid var(--rule);background:var(--paper);cursor:pointer;font:500 11px/1 var(--sans);color:var(--dim)}
+.use .copies{position:absolute;right:8px;top:8px;display:flex;gap:6px}
+.use .copy{padding:5px 9px;border:1px solid var(--rule);background:var(--paper);cursor:pointer;font:500 11px/1 var(--sans);color:var(--dim)}
+.use .copy.p{border-color:var(--ink);color:var(--ink)}
 .use .copy:hover{color:var(--accent);border-color:var(--accent)}
+.use .copy:disabled{opacity:.4;cursor:default}
+.use pre{white-space:pre-wrap;word-break:break-word}
 .ft-bar{height:44px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 28px;border-top:1px solid var(--rule);font-size:12px;color:var(--dim)}
 .ft-bar a:hover{color:var(--accent)}
 @media (max-width:860px){

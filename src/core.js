@@ -11,7 +11,8 @@
 //     el 是一个已经有尺寸的容器；opts.expanded 为 true 表示全屏体验（关掉幽灵光标、允许滚轮等）
 window.MH = (() => {
   const effects = [];
-  const register = e => effects.push(e);
+  // 记下效果来自哪个文件（复制代码时只带这个文件）
+  const register = e => { const src = document.currentScript && document.currentScript.src; e.file = e.file || (src ? src.split('/').pop() : ''); effects.push(e); };
   const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, k) => a + (b - a) * k;

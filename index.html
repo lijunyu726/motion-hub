@@ -14,11 +14,19 @@
 <link rel="stylesheet" href="src/effects.css">
 <link rel="stylesheet" href="src/hub.css">
 <script src="src/core.js"></script>
-<script src="src/effects/backgrounds.js"></script>
+<script src="src/effects/contour.js"></script>
+<script src="src/effects/dots.js"></script>
+<script src="src/effects/flow.js"></script>
+<script src="src/effects/grid.js"></script>
 <script src="src/effects/transitions.js"></script>
 <script src="src/effects/pull.js"></script>
 <script src="src/effects/intro.js"></script>
-<script src="src/effects/ui.js"></script>
+<script src="src/effects/sun-moon.js"></script>
+<script src="src/effects/glow-card.js"></script>
+<script src="src/effects/scramble.js"></script>
+<script src="src/effects/follow-tip.js"></script>
+<script src="src/effects/pipeline.js"></script>
+<script src="src/prompts.js"></script>
 <script src="src/sources.js"></script>
 </head>
 <body>
@@ -42,7 +50,7 @@
         <div class="tech" id="tech"></div>
         <div class="act"><button id="reset" type="button">↻ 重置</button><button id="full" type="button">⛶ 全屏</button></div>
       </div>
-      <div class="use"><pre id="use"></pre><button class="copy" id="copy" type="button">复制完整代码</button></div>
+      <div class="use"><pre id="use"></pre><div class="copies"><button class="copy p" id="copy" type="button">复制提示词 + 代码</button><button class="copy" id="copy-code" type="button">只复制代码</button></div></div>
     </section>
   </main>
 </div>
@@ -53,7 +61,8 @@
 <script>
 const $ = id => document.getElementById(id);
 const CATS = ['背景', '过渡', '翻页', '片头', '交互'];
-const FILE = { 背景: 'backgrounds', 过渡: 'transitions', 翻页: 'pull', 片头: 'intro', 交互: 'ui' };
+// 每个效果需要 effects.css 里的哪几段样式（base 总是带上）
+const CSS_OF = id => id.startsWith('theme-') ? ['tt', 'vfx'] : ({ pull: ['pd'], 'sun-moon': ['sm', 'ui-center', 'sm-stage'], 'glow-card': ['gc'], scramble: ['sc'], 'follow-tip': ['ft'], pipeline: ['pl'] })[id] || ['canvas'];
 const list = MH.effects.slice().sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat));
 $('count').textContent = `${list.length} 个效果 · ${CATS.length} 类`;
 
@@ -83,20 +92,26 @@ const SRC = {};
 const read = f => SRC[f] || (SRC[f] = window.MH_SOURCES && MH_SOURCES[f] != null
   ? Promise.resolve(MH_SOURCES[f])
   : fetch(f).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }));
+// 从 effects.css 里按“@css 名称”标记取出需要的几段
+const cssFor = (css, keys) => {
+  const parts = {}; css.replace(/\/\* @css (\S+) \*\/\n([\s\S]*?)(?=\/\* @css |$)/g, (m, k, body) => { parts[k] = body.trim(); });
+  return ['base', ...keys].map(k => parts[k] || '').filter(Boolean).join('\n\n');
+};
+// 只复制代码：一个能单独打开的 .html，只带这个效果的文件和它用到的样式
 async function fullCode(e) {
-  const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read(`src/effects/${FILE[e.cat]}.js`)]);
+  const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read('src/effects/' + e.file)]);
   const run = e.cat === '过渡'
     ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();\n// 整页深浅切换（View Transitions）：\n// button.onclick = ev => MH.themeSwitch(ev, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}');`
     : `MH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();`;
   return `<!doctype html>
-<!-- ${e.name} · Motion Hub · MIT License · © 2026 LJY -->
+<!-- ${e.name} · Motion Hub · MIT License -->
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${e.name} · Motion Hub</title>
+<title>${e.name}</title>
 <style>
-${css}
+${cssFor(css, CSS_OF(e.id))}
 html,body{height:100%;margin:0;background:var(--paper)}
 #fx{position:relative;height:100vh;overflow:hidden;container-type:size}
 <\/style>
@@ -104,10 +119,10 @@ html,body{height:100%;margin:0;background:var(--paper)}
 <body>
 <div id="fx"></div>
 <script>
-${core}
+${core.trim()}
 <\/script>
 <script>
-${file}
+${file.trim()}
 <\/script>
 <script>
 ${run}
@@ -116,11 +131,42 @@ ${run}
 </html>
 `;
 }
-const embed = e => `<!-- 正在读取完整代码… -->\n<div id="fx" style="height:420px"></div>\n<link rel="stylesheet" href="src/effects.css">\n<script src="src/core.js"><\/script>\n<script src="src/effects/${FILE[e.cat]}.js"><\/script>\n<script>\n  MH.effects.find(e => e.id === '${e.id}')\n    .mount(document.getElementById('fx'), {}).resume();\n<\/script>`;
+// 提示词 + 代码：给 AI 的一段 Markdown，开头留两处让使用者填，后面是原理、参数、注意事项和参考实现
+async function promptText(e) {
+  const P = (window.MH_PROMPTS || {})[e.id] || { look: e.desc, how: [], params: [], notes: [] };
+  const list = a => a.map(x => `- ${x}`).join('\n');
+  return `# 在我的项目里加入「${e.name}」效果
+
+请参考下面的说明和可以直接运行的参考代码，把这个效果加到我的项目里。可以按我的技术栈改写，不必照搬结构。
+
+- 我的项目：（填你的技术栈，例如 React + Tailwind / Vue 3 / Next.js / 纯 HTML）
+- 我想要的调整：（可选，例如换成品牌色、只放在首屏、慢一点、去掉点击效果）
+
+## 效果
+${P.look}
+
+## 实现原理
+${list(P.how)}
+
+## 可以调的参数
+${list(P.params)}
+
+## 注意
+${list([...P.notes, '颜色都来自 CSS 变量 --paper / --ink / --dim / --rule / --accent，换成项目自己的颜色即可。', '要处理 prefers-reduced-motion：系统要求减少动态效果时只显示静止画面。', '组件卸载时要停掉动画循环、移除事件监听（参考代码里的 destroy）。'])}
+
+## 参考实现
+单文件，存成 .html 直接打开就能看到效果。核心在 MH.register 里的 mount 函数；MH.canvasHost 负责画布尺寸、指针坐标和动画循环。
+
+\`\`\`html
+${await fullCode(e)}\`\`\`
+
+来源：Motion Hub · MIT License
+`;
+}
 async function showCode(e) {
-  $('use').textContent = embed(e);
-  try { const code = await fullCode(e); if (cur === e) { $('use').textContent = code; $('copy').disabled = false; } }
-  catch (err) { $('copy').disabled = true; }
+  $('use').textContent = '正在生成…';
+  try { const t = await promptText(e); if (cur === e) { $('use').textContent = t; document.querySelectorAll('.copies button').forEach(b => b.disabled = false); } }
+  catch (err) { $('use').textContent = '读取源码失败：' + err.message; document.querySelectorAll('.copies button').forEach(b => b.disabled = true); }
 }
 $('list').addEventListener('click', ev => { const b = ev.target.closest('button[data-id]'); if (b) select(b.dataset.id); });
 // 上下方向键切换效果；当前是拉扯翻页时，方向键交给它翻页
@@ -134,12 +180,13 @@ addEventListener('keydown', ev => {
 addEventListener('hashchange', () => select(location.hash.slice(1), false));
 $('reset').addEventListener('click', () => select(cur.id));
 $('full').addEventListener('click', () => { const s = $('stage'); document.fullscreenElement ? document.exitFullscreen() : s.requestFullscreen && s.requestFullscreen(); });
-$('copy').addEventListener('click', async () => {
-  const b = $('copy');
-  try { await navigator.clipboard.writeText(await fullCode(cur)); b.textContent = '已复制，可存成 .html 打开'; }
-  catch (e) { b.textContent = '复制失败'; }
-  setTimeout(() => b.textContent = '复制完整代码', 1800);
+const copyWith = (id, make, ok) => $(id).addEventListener('click', async () => {
+  const b = $(id), t0 = b.textContent;
+  try { await navigator.clipboard.writeText(await make(cur)); b.textContent = ok; } catch (e) { b.textContent = '复制失败'; }
+  setTimeout(() => b.textContent = t0, 1800);
 });
+copyWith('copy', promptText, '已复制，粘贴给 AI 即可');
+copyWith('copy-code', fullCode, '已复制，存成 .html 就能打开');
 
 // 深浅开关：图标和“太阳月亮开关”同一套；过渡用当前选中的那一种（选中的不是过渡时用点阵扩散）
 (() => {
