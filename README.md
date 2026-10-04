@@ -6,7 +6,7 @@
 
 原生 JavaScript（Vanilla JS）· Zero Dependencies · No Build · 23 个效果
 
-[在线演示 motion.lijunyu.com.cn](https://motion.lijunyu.com.cn) · [作者官网 lijunyu.com.cn](https://lijunyu.com.cn)
+[在线演示 motion.lijunyu.com.cn](https://motion.lijunyu.com.cn) · [npm](https://www.npmjs.com/package/motion-hub) · [作者官网 lijunyu.com.cn](https://lijunyu.com.cn)
 
 <img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/bench-day.jpg" alt="Motion Hub 实验台（浅色）" width="100%">
 
@@ -124,9 +124,9 @@ node tools/smoke.mjs --night --mobile
 - **一行安装**（需要 Node.js 18+）：
 
   ```bash
-  npx github:lijunyu726/motion-hub              # 装到 ~/.claude/skills/（所有项目可用）
-  npx github:lijunyu726/motion-hub --project    # 装到当前项目的 .claude/skills/
-  npx github:lijunyu726/motion-hub --dir <路径>  # 其他支持 Agent Skills 的工具：装到它的 skills 目录
+  npx motion-hub              # 装到 ~/.claude/skills/（所有项目可用）
+  npx motion-hub --project    # 装到当前项目的 .claude/skills/
+  npx motion-hub --dir <路径>  # 其他支持 Agent Skills 的工具：装到它的 skills 目录
   ```
 - **手动安装**：下载 https://motion.lijunyu.com.cn/skill/motion-hub.zip ，解压到上面的目录。实验台右上角的「Skill」里也有这两种方式。
 
