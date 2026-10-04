@@ -69,7 +69,7 @@
 - 每个效果是独立文件 / 独立 `register` 调用，出问题时可以先从 `index.html` 去掉对应 `<script>`，或删掉那个 `register` 块。
 - 用 `git log` / `git revert` 回退，不要改写已推送的历史。
 
-- 线上回退：`git checkout <旧提交> -- .` 之外更简单的是 `git revert` 后重新 `bash deploy/deploy.sh`；整站下线：删掉 nginx 配置 `motion.lijunyu.com.cn.conf` 后 reload，再到 DNSPod 删掉 `motion` 记录。
+- 线上回退：`git revert` 后重新 `bash deploy/deploy.sh`；整站下线：删掉 nginx 配置 `motion.lijunyu.com.cn.conf` 后 reload，再到 DNSPod 删掉 `motion` 记录。
 
 ## 推送
 
