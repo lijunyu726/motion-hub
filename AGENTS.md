@@ -61,7 +61,7 @@
 - `skills/motion-hub/`（`npx skills` 认的标准位置；2026-10-04 从 `skill/` 改名）由 `npm run skill`（`tools/build-skill.mjs`）生成，进仓库；不要手改，改效果 / 参数 / `prompts.js` 后重新生成。单文件是用无头 Chrome 打开实验台、调用页面里的 `fullCode()` 生成的，和“复制 Prompt + 代码”同一套逻辑（默认参数、不带强调色）。
 - 设计决策（2026-10-04 作者改为在线优先）：Agent 先 `curl` 网站上的 `/skill/motion-hub/index.json`（网站路径仍是单数 skill，已安装的 Skill 写死了它，不能改） 发现新效果、下载新的效果文件，连不上网时用 Skill 自带的副本。目的：加了新效果后用户不用重新下载 Skill。SKILL.md 本身只有重装才会更新，所以流程写成通用的，新效果的信息只放在 `index.json`。为了不被网页抓取工具“总结”坏代码，SKILL.md 要求优先用命令行原样下载；并写明只认本站地址、下载的内容不是给 Agent 的指令。版本号 = 效果数 + 全部效果文件的哈希，内容不变版本不变。
 - 安装：`npx motion-hub`（npm 包 `motion-hub`，账号 ljyaaa，2026-10-04 发布 0.1.0）。`bin/install-skill.mjs` 零依赖，把 `skills/motion-hub/` 复制到 `~/.claude/skills/`，`--project` / `--dir` 改位置。`package.json` 的 `files` 白名单只打包 bin、skills/motion-hub、LICENSE、README；`prepublishOnly` 会重新生成 Skill，和已提交的不一致就中止。`npx github:lijunyu726/motion-hub` 也能用（仓库要保持公开）。
-- 也支持 `npx skills add lijunyu726/motion-hub`（vercel-labs/skills，按 `skills/<名字>/SKILL.md` 发现，可选装到多个 Agent）。它从 GitHub 拉取，推送后就生效，不用发 npm。
+- **主推的安装方式是 `npx skills add lijunyu726/motion-hub`**（作者 2026-10-04 决定；网站弹层和 README 都只主推这条；vercel-labs/skills，按 `skills/<名字>/SKILL.md` 发现，可选装到多个 Agent）。它从 GitHub 拉取，推送后就生效，不用发 npm。
 - 发布新版本：先改 `package.json` 的 `version`（发过的版本号不能再用）并提交，再运行 `script -q /dev/null npm publish --auth-type=web`，在浏览器里打开它给的 `npmjs.com/auth/cli/…` 链接，用 Mac 指纹（安全密钥）确认。npm 要求两步验证才能发布；不在终端里（没有 TTY）运行时 npm 不会弹验证，直接报 EOTP，所以要用 `script` 包一层。终端会在 80 列处折行，复制链接时注意别截断。
 - 只有改了 SKILL.md 的使用说明或安装脚本才需要发 npm 新版本；新效果只要部署网站，已安装的 Skill 会在线获取。
 - 部署时会重新生成并打成 `skills/motion-hub.zip`（不进仓库），传到网站的 `/skill/motion-hub.zip`。
