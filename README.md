@@ -6,7 +6,7 @@
 
 原生 JavaScript（Vanilla JS）· Zero Dependencies · No Build · 23 个效果
 
-[作者官网 lijunyu.com.cn](https://lijunyu.com.cn) · 在线演示（部署中）
+[在线演示 motion.lijunyu.com.cn](https://motion.lijunyu.com.cn) · [作者官网 lijunyu.com.cn](https://lijunyu.com.cn)
 
 <img src="docs/bench-day.jpg" alt="Motion Hub 实验台（浅色）" width="100%">
 

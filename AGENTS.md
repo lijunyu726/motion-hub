@@ -56,10 +56,20 @@
 - 页脚的 ICP 备案号是部署到个人子域名的合规要求，不要删除。
 - 许可证 MIT + Commons Clause（参照 React Bits）：任何项目都能用，但不能售卖效果本身。仓库目前私有，准备做完后整个公开；不要擅自改可见性，公开由作者决定。
 
+## 部署（2026-10-04 上线 https://motion.lijunyu.com.cn）
+
+- `bash deploy/deploy.sh`：先检查 `src/sources.js` 没过期，再用 rsync 只同步 `index.html`、`favicon.svg`、`robots.txt`、`LICENSE`、`src/` 到服务器 `/www/wwwroot/motion.lijunyu.com.cn/`（ssh 别名 `tc`）。其他文件（文档、tools、docs、node_modules、scratch）都不传；新加了网页要用的顶层文件，要同时加进脚本的 `--include`。
+- nginx 由宝塔管理（`/www/server/nginx/sbin/nginx`，改完先 `-t` 再 `-s reload`），配置 `/www/server/panel/vhost/nginx/motion.lijunyu.com.cn.conf`，副本在 `deploy/nginx-motion.lijunyu.com.cn.conf`。手写配置，宝塔“网站”列表里看不到。
+- 证书：Let's Encrypt，用宝塔 `class/acme_v2.py --type http --path /www/wwwroot/panel_ssl_site` 签发（命令行运行要加 `PYTHONPATH=/www/server/panel:/www/server/panel/class`），复制到 `/www/server/panel/vhost/cert/motion.lijunyu.com.cn/`。宝塔每天的续签任务会替换 `vhost/cert/` 下同域名的证书并重载 nginx（看代码得出，还没实际经历过一次续签）。80 端口的 `/.well-known/acme-challenge/` 指向 `panel_ssl_site`，别删。
+- HTML / JS / CSS 是 `no-cache`（每次确认，没变返回 304），图片缓存 7 天。
+- 仓库目前私有，顶栏的 GitHub 链接对访客会是 404，公开仓库后才正常。
+
 ## 回退
 
 - 每个效果是独立文件 / 独立 `register` 调用，出问题时可以先从 `index.html` 去掉对应 `<script>`，或删掉那个 `register` 块。
 - 用 `git log` / `git revert` 回退，不要改写已推送的历史。
+
+- 线上回退：`git checkout <旧提交> -- .` 之外更简单的是 `git revert` 后重新 `bash deploy/deploy.sh`；整站下线：删掉 nginx 配置 `motion.lijunyu.com.cn.conf` 后 reload，再到 DNSPod 删掉 `motion` 记录。
 
 ## 推送
 
