@@ -1,6 +1,6 @@
 // ───── 太阳 ⇄ 月亮：一个圆 + 一个“咬掉一口”的遮罩 + 八条光芒；遮罩移进来、光芒收起就是月亮 ─────
 MH.register({
-  id: 'sun-moon', name: '太阳月亮开关', cat: '交互', tech: 'SVG 遮罩 · CSS 变换',
+  id: 'sun-moon', name: '太阳月亮开关', cat: '交互', tech: 'SVG Mask · CSS Transform',
   desc: '深浅模式开关的图标：浅色时是月亮（点了变深色），深色时是太阳；切换时光芒收起、圆被咬掉一口变成月牙。',
   mount(el, opts) {
     const rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<line x1="12" y1="2.5" x2="12" y2="4.5" transform="rotate(${a} 12 12)"/>`).join('');

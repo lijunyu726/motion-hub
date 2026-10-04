@@ -38,5 +38,5 @@ function dotField(quiet) {
     };
   });
 }
-MH.register({ id: 'dots', name: '磁性点阵', cat: '背景', tech: 'Canvas · 弹簧阻尼', desc: '整屏点阵被鼠标推开再弹回，推开的点变大、变成强调色；点击发出一圈冲击波。', mount: dotField(false) });
+MH.register({ id: 'dots', name: '磁性点阵', cat: '背景', tech: 'Canvas 2D · Spring-Damper Physics', desc: '整屏点阵被鼠标推开再弹回，推开的点变大、变成强调色；点击发出一圈冲击波。', mount: dotField(false) });
 MH.register({ id: 'dots-quiet', name: '安静点阵', cat: '背景', tech: 'Canvas · 弹簧阻尼', desc: '同一套点阵的阅读版：点更淡、推开的范围和力度更小，没有冲击波，适合长文页面。', mount: dotField(true) });

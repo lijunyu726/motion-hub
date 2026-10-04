@@ -4,7 +4,7 @@
 
 **网页动效合集 · 背景 / 深浅过渡 / 拉扯翻页 / 片头 / 小交互**
 
-原生 JavaScript · 无依赖 · 无构建 · 23 个效果
+原生 JavaScript（Vanilla JS）· Zero Dependencies · No Build · 23 个效果
 
 [作者官网 lijunyu.com.cn](https://lijunyu.com.cn) · 在线演示（部署中）
 

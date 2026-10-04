@@ -2,7 +2,7 @@
 
 // ───── 等高线：平滑噪声当地形，每隔一个高度描一圈线（marching squares）；鼠标处隆起，点击泛起波纹 ─────
 MH.register({
-  id: 'contour', name: '等高线', cat: '背景', tech: 'Canvas · Perlin 噪声 · Marching Squares',
+  id: 'contour', name: '等高线', cat: '背景', tech: 'Canvas 2D · Perlin Noise · Marching Squares',
   desc: '地形缓慢漂移，鼠标处隆起一座小山，最高的几圈变成强调色；点击会荡开一圈圈波纹。',
   mount: (el, opts) => MH.canvasHost(el, opts, h => {
     const noise = MH.perlin(3), LEVELS = [], m = { x: -999, y: -999, a: 0 }, waves = [];

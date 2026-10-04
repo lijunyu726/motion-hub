@@ -2,7 +2,7 @@
 
 // ───── 跟随光标的信息卡：悬停列表行时，一张小卡片带一点延迟地跟着指针；靠近右边缘时翻到指针左侧 ─────
 MH.register({
-  id: 'follow-tip', name: '跟随信息卡', cat: '交互', tech: '线性插值 · 指针跟随',
+  id: 'follow-tip', name: '跟随信息卡', cat: '交互', tech: 'Lerp · Pointer Tracking',
   desc: '悬停在某一行时，信息卡带着一点“拖拽感”跟随指针，靠近边缘会自动翻到另一侧。',
   mount(el, opts) {
     const ROWS = [['01', '等高线', 'Canvas · Marching Squares'], ['02', '磁性点阵', 'Canvas · 弹簧阻尼'], ['03', '风场', 'Canvas · 粒子'], ['04', '拉扯翻页', 'DOM 切条']];

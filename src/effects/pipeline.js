@@ -1,6 +1,6 @@
 // ───── 校验链：一个小点依次走过各道关，走过的关点亮，到终点停一下再重来 ─────
 MH.register({
-  id: 'pipeline', name: '校验链', cat: '交互', tech: 'SVG · 分段缓动',
+  id: 'pipeline', name: '校验链', cat: '交互', tech: 'SVG · Staged Easing',
   desc: '一次操作依次经过多道检查：小点在每道关前减速、通过后点亮，适合解释流程或状态机。',
   mount(el, opts) {
     const G = opts.gates || ['计划', '身份', '权限', '状态', '幂等', '限流', '审计'];

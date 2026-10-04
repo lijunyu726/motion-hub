@@ -2,7 +2,7 @@
 // 做法：把要被扯走的那一页复制一份，横切成很多细条；每条按离“抓点”的远近做竖向位移和拉伸，拼起来就是被拉长的样子。
 // 只做竖向（横向不缩放），字的边缘才是连续的，没有台阶。
 MH.register({
-  id: 'pull', name: '拉扯翻页', cat: '翻页', tech: 'DOM 切条 · 指数衰减位移 · 指针拖动',
+  id: 'pull', name: '拉扯翻页', cat: '翻页', tech: 'DOM Slicing · Exponential Decay · Pointer Drag',
   desc: '往下翻，当前页的信息先被扯长，再整体拽走；往上翻，上一页从底部被拉上来。也可以按住拖动，拖过两成或甩得够快就翻页，否则弹回。',
   usage: `const deck = MH.effects.find(e => e.id === 'pull').mount(el, { slides: ['…', '…'] });\ndeck.resume();`,
   mount(el, opts) {

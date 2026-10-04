@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Motion Hub · 网页动效合集</title>
 <link rel="icon" href="data:,">
-<meta name="description" content="网页动效合集：背景、深浅切换过渡、拉扯翻页、片头与小交互。原生 JavaScript，无依赖。">
+<meta name="description" content="网页动效合集：背景、深浅切换过渡、拉扯翻页、片头与小交互。原生 JavaScript（Vanilla JS），零依赖。">
 <script>
   // 先定深浅色再渲染，避免闪一下：默认浅色（不跟随系统），用户切过就记住
   (() => { let m = null; try { m = localStorage.getItem('mh-theme'); } catch (e) {}
@@ -50,17 +50,19 @@
         <div class="tech" id="tech"></div>
         <div class="act"><button id="reset" type="button">↻ 重置</button><button id="full" type="button">⛶ 全屏</button></div>
       </div>
-      <div class="use"><pre id="use"></pre><div class="copies"><button class="copy p" id="copy" type="button">复制代码</button></div></div>
+      <div class="use"><pre id="use"></pre><div class="copies"><button class="copy p" id="copy" type="button">复制 Prompt + 代码</button></div></div>
     </section>
   </main>
 </div>
 <footer class="ft-bar">
-  <span>MIT + Commons Clause · © 2026 LJY · 原生 JavaScript，无依赖</span>
+  <span>MIT + Commons Clause · © 2026 LJY · Vanilla JS · Zero Dependencies</span>
   <span><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">鲁ICP备2026056774号-1</a></span>
 </footer>
 <script>
 const $ = id => document.getElementById(id);
 const CATS = ['背景', '过渡', '翻页', '片头', '交互'];
+// 分类的英文名，显示成小字
+const CAT_EN = { 背景: 'Backgrounds', 过渡: 'Theme Transitions', 翻页: 'Page Turn', 片头: 'Intro', 交互: 'Interactions' };
 // 每个效果需要 effects.css 里的哪几段样式（base 总是带上）
 const CSS_OF = id => id.startsWith('theme-') ? ['tt', 'vfx'] : ({ pull: ['pd'], 'sun-moon': ['sm', 'ui-center', 'sm-stage'], 'glow-card': ['gc'], scramble: ['sc'], 'follow-tip': ['ft'], pipeline: ['pl'] })[id] || ['canvas'];
 const list = MH.effects.slice().sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat));
@@ -70,7 +72,7 @@ $('count').textContent = `${list.length} 个效果 · ${CATS.length} 类`;
 // 序号在每个分类里从 01 重新开始
 $('list').innerHTML = CATS.map(c => {
   const items = list.filter(e => e.cat === c);
-  return `<h2>${c}<span>${items.length}</span></h2>` + items.map((e, i) => `<button type="button" data-id="${e.id}"><i>${String(i + 1).padStart(2, '0')}</i>${e.name}</button>`).join('');
+  return `<h2>${c}<em>${CAT_EN[c]}</em><span>${items.length}</span></h2>` + items.map((e, i) => `<button type="button" data-id="${e.id}"><i>${String(i + 1).padStart(2, '0')}</i>${e.name}</button>`).join('');
 }).join('');
 
 // 舞台：同一时间只运行一个效果；切换时销毁旧的
@@ -82,7 +84,7 @@ function select(id, push = true) {
   cur = e; inst = e.mount($('stage'), {}); inst.resume();
   document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b.dataset.id === e.id));
   document.querySelector(`#list button[data-id="${e.id}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  $('cat').textContent = e.cat; $('name').textContent = e.name; $('desc').textContent = e.desc; $('tech').textContent = e.tech;
+  $('cat').textContent = `${e.cat} · ${CAT_EN[e.cat]}`; $('name').textContent = e.name; $('desc').textContent = e.desc; $('tech').textContent = e.tech;
   showCode(e);
   if (push && location.hash !== '#' + e.id) history.replaceState(null, '', '#' + e.id);
 }

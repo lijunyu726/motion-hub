@@ -2,7 +2,7 @@
 
 // ───── 乱码落定：文字先变成一串随机符号，再从左到右一个个落定 ─────
 MH.register({
-  id: 'scramble', name: '乱码落定', cat: '交互', tech: 'requestAnimationFrame · 文本替换',
+  id: 'scramble', name: '乱码落定', cat: '交互', tech: 'requestAnimationFrame · Text Scramble',
   desc: '指针经过时，文字先变成乱码，再从左到右一个个落回原字，适合导航和标题。',
   mount(el, opts) {
     const WORDS = ['MOTION HUB', '背景 · 过渡 · 翻页', 'HELLO, LJY'];

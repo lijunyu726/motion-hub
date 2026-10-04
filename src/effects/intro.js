@@ -4,7 +4,7 @@
 //   3.4–6.0s  字幕依次闪过，每出现一个，从文字中心荡开一圈波纹
 //   6.0–6.8s  收住，最后一帧可以直接当背景“定格”
 MH.register({
-  id: 'intro', name: '点阵拼字片头', cat: '片头', tech: 'Canvas · 纯函数时间轴 · 文字采样',
+  id: 'intro', name: '点阵拼字片头', cat: '片头', tech: 'Canvas 2D · Pure-Function Timeline · Text Sampling',
   desc: '网格点亮起，屏幕外的点飞进来拼成文字，字幕依次闪过并荡开波纹；播完定格。点一下重播。',
   usage: `MH.effects.find(e => e.id === 'intro').mount(el, { text: 'LJY', captions: ['…'] }).resume();`,
   mount(el, opts) {

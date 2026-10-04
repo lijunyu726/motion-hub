@@ -2,7 +2,7 @@
 
 // ───── 坐标网格：坐标纸 + 十字准线 + 坐标读数；鼠标经过的格子“加热”，四角亮起角标后慢慢冷却 ─────
 MH.register({
-  id: 'grid', name: '坐标网格', cat: '背景', tech: 'Canvas · 热度衰减',
+  id: 'grid', name: '坐标网格', cat: '背景', tech: 'Canvas 2D · Heat Decay',
   desc: '坐标纸背景，鼠标拖出十字准线和实时坐标；经过的格子四角亮起红色角标，再慢慢暗下去。',
   mount: (el, opts) => MH.canvasHost(el, opts, h => {
     let C = h.colors(), S, cols, rows, heat;

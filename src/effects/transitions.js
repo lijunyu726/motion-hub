@@ -106,7 +106,7 @@
     };
   }
   for (const [id, fx] of Object.entries(FX)) {
-    MH.register({ id: `theme-${id}`, name: fx.name, cat: '过渡', tech: id === 'flip' ? 'WAAPI · 3D 变换' : (/dots|blinds|halftone|soft/.test(id) ? 'CSS 遮罩 · @property' : 'WAAPI · clip-path'), desc: fx.desc + ' 点画面任意位置触发。', mount: mountTransition(id) });
+    MH.register({ id: `theme-${id}`, name: fx.name, cat: '过渡', tech: 'View Transitions API · ' + (id === 'flip' ? 'WAAPI · 3D Transform' : (/dots|blinds|halftone|soft/.test(id) ? 'CSS Mask · @property' : 'WAAPI · clip-path')), desc: fx.desc + ' 点画面任意位置触发。', mount: mountTransition(id) });
   }
 
   // ───── 真实网站用：整页深浅切换 ─────

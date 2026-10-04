@@ -2,7 +2,7 @@
 
 // ───── 边框高光卡片：只在边框那 1.5px 上画一个跟着指针的径向渐变（不给文字铺底色），外加轻微 3D 倾斜 ─────
 MH.register({
-  id: 'glow-card', name: '边框高光卡片', cat: '交互', tech: 'CSS 遮罩 · mask-composite · 3D 倾斜',
+  id: 'glow-card', name: '边框高光卡片', cat: '交互', tech: 'CSS Mask · mask-composite · 3D Tilt',
   desc: '指针在卡片上移动时，边框沿着指针亮起一段光，卡片同时朝指针方向轻轻倾斜。',
   mount(el, opts) {
     el.insertAdjacentHTML('beforeend', `<div class="gc-wrap">${['01', '02', '03'].map((n, i) => `<div class="gc"><span>${n}</span><b>${['等高线', '点阵扩散', '拉扯翻页'][i]}</b><em>${['背景', '过渡', '翻页'][i]}</em></div>`).join('')}</div>`);

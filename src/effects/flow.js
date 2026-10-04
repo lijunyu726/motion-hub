@@ -2,7 +2,7 @@
 
 // ───── 风场：粒子顺着噪声角度流动，画布每帧轻微擦掉一点形成拖尾；鼠标附近卷成漩涡 ─────
 MH.register({
-  id: 'flow', name: '风场', cat: '背景', tech: 'Canvas · 粒子 · 噪声流场',
+  id: 'flow', name: '风场', cat: '背景', tech: 'Canvas 2D · Particles · Noise Flow Field',
   desc: '几千个粒子顺着看不见的风流动，留下淡淡的拖尾；鼠标附近被卷成漩涡，经过的粒子变成强调色。',
   mount: (el, opts) => MH.canvasHost(el, opts, h => {
     const noise = MH.perlin(11);
