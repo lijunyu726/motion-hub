@@ -36,7 +36,15 @@
   <a class="logo" href="#">MOTION HUB</a>
   <span class="count" id="count"></span>
   <nav>
-    <a href="skill/motion-hub.zip" download title="下载 Agent Skill：把 23 个效果交给 Claude 等 AI 直接用">Skill ↓</a>
+    <div class="skw">
+      <button class="skb" id="skb" type="button" aria-expanded="false" aria-controls="skp">Skill</button>
+      <div class="skp" id="skp" hidden>
+        <b>安装 Agent Skill</b>
+        <p>装好后对 AI 说“给首页加一个等高线背景”，它会自己挑效果、按你的技术栈改写。新加的效果会自动在线获取，不用重装。</p>
+        <div class="skc"><code>npx github:lijunyu726/motion-hub</code><button type="button" data-cmd="npx github:lijunyu726/motion-hub">复制</button></div>
+        <small>装到 <code>~/.claude/skills/</code>；只给当前项目用加 <code>--project</code>，其他工具用 <code>--dir &lt;路径&gt;</code>。没有 Node.js 也可以 <a href="skill/motion-hub.zip" download>下载 zip</a> 手动解压。</small>
+      </div>
+    </div>
     <a href="https://github.com/lijunyu726/motion-hub" target="_blank" rel="noopener">GitHub</a>
     <button class="sm" id="mode" type="button"></button>
   </nav>
@@ -228,6 +236,18 @@ addEventListener('keydown', ev => {
 });
 addEventListener('hashchange', () => select(location.hash.slice(1), false));
 $('reset').addEventListener('click', () => run(cur));
+// 顶栏 Skill：点开安装说明，命令一键复制；点外面或按 Esc 收起
+const skp = $('skp'), skb = $('skb');
+const skOpen = v => { skp.hidden = !v; skb.setAttribute('aria-expanded', v); };
+skb.addEventListener('click', e => { e.stopPropagation(); skOpen(skp.hidden); });
+skp.addEventListener('click', async e => {
+  e.stopPropagation();
+  const b = e.target.closest('[data-cmd]'); if (!b) return;
+  try { await navigator.clipboard.writeText(b.dataset.cmd); b.textContent = '已复制'; } catch (err) { b.textContent = '复制失败'; }
+  setTimeout(() => b.textContent = '复制', 1600);
+});
+addEventListener('click', () => skOpen(false));
+addEventListener('keydown', e => { if (e.key === 'Escape') skOpen(false); });
 $('full').addEventListener('click', () => { const s = $('stage'); document.fullscreenElement ? document.exitFullscreen() : s.requestFullscreen && s.requestFullscreen(); });
 const copyWith = (id, make, ok) => $(id).addEventListener('click', async () => {
   const b = $(id), t0 = b.textContent;

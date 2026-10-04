@@ -17,6 +17,20 @@ button{font:inherit;color:inherit}
 .hd nav a{color:var(--dim)}
 .hd nav a:hover{color:var(--ink)}
 .hd .sm{border:none;border-radius:999px;background:var(--paper2)}
+/* 顶栏 Skill 按钮和安装说明弹层 */
+.skw{position:relative}
+.skb{padding:8px 14px;border:none;border-radius:999px;background:var(--ink);color:var(--paper);cursor:pointer;font:700 13px/1 var(--ui)}
+.skb[aria-expanded="true"],.skb:hover{background:var(--accent);color:var(--on-accent)}
+.skp{position:absolute;right:0;top:calc(100% + 10px);z-index:20;width:min(420px,calc(100vw - 32px));padding:18px;border-radius:18px;background:var(--paper);box-shadow:0 18px 50px rgba(0,0,0,.18),0 0 0 1px var(--rule);font:500 13px/1.6 var(--ui);color:var(--body)}
+.skp[hidden]{display:none}
+.skp>b{display:block;font:800 16px/1.2 var(--ui);color:var(--ink)}
+.skp p{margin-top:8px}
+.skc{display:flex;align-items:center;gap:8px;margin-top:12px;padding:6px 6px 6px 14px;border-radius:999px;background:var(--paper2)}
+.skc code{flex:1;min-width:0;overflow-x:auto;white-space:nowrap;font:600 13px/1.4 var(--mono);color:var(--ink)}
+.skc button{flex:none;padding:8px 12px;border:none;border-radius:999px;background:var(--accent);color:var(--on-accent);cursor:pointer;font:700 12px/1 var(--ui)}
+.skp small{display:block;margin-top:12px;font-size:12px;color:var(--dim)}
+.skp small code{font:500 11px/1 var(--mono);color:var(--body)}
+.skp small a{color:var(--accent);text-decoration:underline}
 .hd .sm:hover{color:var(--accent)}
 
 /* ───── 实验台：左边名单，右边舞台 + 说明（两块面板） ───── */
@@ -79,6 +93,7 @@ html[data-hubfx]::view-transition-group(root){background:#0B0B0D}
 @media (max-width:860px){
   html,body{height:auto}
   .hd{padding:0 16px;gap:14px}.hd .count{display:none}
+  .skp{position:fixed;left:16px;right:16px;top:62px;width:auto}
   .bench{display:block;height:auto;padding:0 10px 10px}
   .list{display:flex;gap:6px;overflow-x:auto;padding:10px;margin-bottom:10px}
   .list h2{display:none}
