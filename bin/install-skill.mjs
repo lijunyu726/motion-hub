@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 安装 Motion Hub 的 Agent Skill：把仓库里的 skill/motion-hub/ 复制到 Agent 的 skills 目录。零依赖。
+// 安装 Motion Hub 的 Agent Skill：把仓库里的 skills/motion-hub/ 复制到 Agent 的 skills 目录。零依赖。
 //   npx motion-hub              装到 ~/.claude/skills/motion-hub（所有项目可用）
 //   npx motion-hub --project    装到当前目录的 .claude/skills/motion-hub（只给这个项目）
 //   npx motion-hub --dir <路径>  装到指定的 skills 目录下（其他 Agent 工具用）
@@ -17,8 +17,8 @@ if (args.includes('-h') || args.includes('--help')) {
   npx motion-hub --dir <路径>  装到指定的 skills 目录`);
   process.exit(0);
 }
-const src = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'skill', 'motion-hub');
-if (!fs.existsSync(path.join(src, 'SKILL.md'))) { console.error('找不到 skill/motion-hub/SKILL.md，安装包不完整'); process.exit(1); }
+const src = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'skills', 'motion-hub');
+if (!fs.existsSync(path.join(src, 'SKILL.md'))) { console.error('找不到 skills/motion-hub/SKILL.md，安装包不完整'); process.exit(1); }
 
 const i = args.indexOf('--dir');
 if (i >= 0 && !args[i + 1]) { console.error('--dir 后面要跟一个目录'); process.exit(1); }

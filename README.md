@@ -119,7 +119,7 @@ node tools/smoke.mjs --night --mobile
 
 ## 作为 Agent Skill 使用
 
-`skill/motion-hub/` 是一个 [Agent Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)：`SKILL.md` 是给 AI 的入口说明和全部效果的索引，`effects/` 里是 23 个“Prompt + 代码”单文件（和实验台复制出来的一样，默认参数）。装好以后直接对 AI 说“给首页加一个等高线背景”“深浅切换换成点阵扩散”，它会自己挑效果、读原理、按你的技术栈改写。
+`skills/motion-hub/` 是一个 [Agent Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)：`SKILL.md` 是给 AI 的入口说明和全部效果的索引，`effects/` 里是 23 个“Prompt + 代码”单文件（和实验台复制出来的一样，默认参数）。装好以后直接对 AI 说“给首页加一个等高线背景”“深浅切换换成点阵扩散”，它会自己挑效果、读原理、按你的技术栈改写。
 
 - **一行安装**（需要 Node.js 18+）：
 
@@ -127,6 +127,12 @@ node tools/smoke.mjs --night --mobile
   npx motion-hub              # 装到 ~/.claude/skills/（所有项目可用）
   npx motion-hub --project    # 装到当前项目的 .claude/skills/
   npx motion-hub --dir <路径>  # 其他支持 Agent Skills 的工具：装到它的 skills 目录
+  ```
+- **用 [skills](https://github.com/vercel-labs/skills) 安装**，可以选装到哪些 Agent（Claude Code、Codex、Cursor 等）：
+
+  ```bash
+  npx skills add lijunyu726/motion-hub                       # 交互式选择 Agent 和安装范围
+  npx skills add lijunyu726/motion-hub -g -a claude-code -a codex -y   # 直接装到指定 Agent（全局）
   ```
 - **手动安装**：下载 https://motion.lijunyu.com.cn/skill/motion-hub.zip ，解压到上面的目录。实验台右上角的「Skill」里也有这两种方式。
 

@@ -1,4 +1,4 @@
-// 生成 Agent Skill：skill/motion-hub/
+// 生成 Agent Skill：skills/motion-hub/
 //   SKILL.md          给 AI 的入口说明：在线优先取最新目录和代码、离线用自带的；怎么挑效果、怎么放进项目；打包时的效果索引
 //   index.json        效果目录（版本号、每个效果的说明 / 参数 / 文件 / sha256）；部署后同一份放在网站上，Agent 用它发现新效果
 //   effects/<id>.html 每个效果一个“Prompt + 代码”单文件，和实验台“复制 Prompt + 代码”拿到的完全一样（默认参数）
@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = 'https://motion.lijunyu.com.cn/skill/motion-hub/';
 const sha = t => crypto.createHash('sha256').update(t).digest('hex');
-const out = path.join(root, 'skill', 'motion-hub');
+const out = path.join(root, 'skills', 'motion-hub'); // skills/<名字>/SKILL.md 是 npx skills（vercel-labs/skills）认的标准位置
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 const browser = await puppeteer.launch({ executablePath: CHROME });
@@ -103,4 +103,4 @@ MIT + Commons Clause：可以免费用在任何项目里（包括商业项目）
 ${index}
 `;
 fs.writeFileSync(path.join(out, 'SKILL.md'), skill);
-console.log(`已生成 skill/motion-hub/：SKILL.md + index.json（版本 ${version}）+ ${data.length} 个效果文件`);
+console.log(`已生成 skills/motion-hub/：SKILL.md + index.json（版本 ${version}）+ ${data.length} 个效果文件`);
