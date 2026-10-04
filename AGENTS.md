@@ -33,6 +33,7 @@
 ## 关键设计决策和踩坑
 
 - **复制代码（代码和提示词一体）**：`fullCode()` 拼一个独立 `.html`：开头一段注释由 `header()` 用 `src/prompts.js` 生成（怎么用、效果、原理、参数、注意、代码结构），后面是 `effects.css` 里 base + 这个效果的 `@css` 段、`core.js`、效果自己的文件。注释里不能出现 `-->`（`header()` 会替换）。源码取自 `src/sources.js`（`npm run sources` 生成并提交），因为 `file://` 下浏览器禁止 `fetch` 读本地文件；取不到时才退回 `fetch`。**改了 `src/effects.css`、`src/core.js` 或 `src/effects/` 后必须重新运行 `npm run sources`**，冒烟测试会检查并在过期时失败。内联 `<script>` 里的模板字符串必须写 `<\/script>`，否则会提前结束脚本块（踩过）。CSS 注释里不能出现 `*/`（踩过）。
+- **参数面板**：效果用 `params: [{ k, label, type: 'range'|'text'|'lines', def, min, max, step, unit }]` 声明可调参数，`MH.register` 会把 `def` 补进 `mount` 的 `opts`，效果代码直接读 `opts.k`。实验台据此生成控件，改动后重新挂载效果（不做逐帧热更新）；强调色是所有效果共用的，设在舞台的 `--accent` 上。“复制 Prompt + 代码”会把当前参数写进文件末尾的 `mount(…, {…})`，文件头【opts 参数】列出所有参数和默认值。加新效果时要给它写 `params`。
 - **风格**：Acid（2026-10-04 起）。作者要求和个人网站（暖纸色 + 朱红 + 衬线、刊物感）明显不同，用来展示不同的设计能力。配色：浅色暖灰 `#F1F0EC` + 紫罗兰 `#6B4EFF`，深色近黑 `#111113` + 酸橙绿 `#C6F21E`；`--hi` 是另一种高亮色（标签、小圆点）。写在 `effects.css` 的 `:root` / `[data-theme=night]` / `[data-theme=day]` 三处，改配色要三处一起改。实验台界面用无衬线粗体（`hub.css` 的 `--ui`）、大圆角面板、胶囊按钮；效果演示里的文字仍用 effects.css 的字体变量。
 
 - **深浅切换：过渡播完之前再点不生效**：试过“点一次切一次”（打断上一次过渡），作者觉得连点时被打断很生硬，改回等播完。舞台演示用 `settle` 判断是否在播；整页用 `MH.themeSwitch` 里的 `active`。

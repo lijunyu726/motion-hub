@@ -4,16 +4,22 @@
 MH.register({
   id: 'contour', name: '等高线', cat: '背景', tech: 'Canvas 2D · Perlin Noise · Marching Squares',
   desc: '地形缓慢漂移，鼠标处隆起一座小山，最高的几圈变成强调色；点击会荡开一圈圈波纹。',
+  params: [
+    { k: 'cell', label: '网格精度', type: 'range', min: 6, max: 28, step: 1, def: 14, unit: 'px' },
+    { k: 'step', label: '等高距', type: 'range', min: 0.06, max: 0.3, step: 0.01, def: 0.12 },
+    { k: 'speed', label: '漂移速度', type: 'range', min: 0, max: 5, step: 0.1, def: 1, unit: '×' },
+    { k: 'hill', label: '隆起高度', type: 'range', min: 0, max: 2, step: 0.05, def: 0.9 },
+  ],
   mount: (el, opts) => MH.canvasHost(el, opts, h => {
     const noise = MH.perlin(3), LEVELS = [], m = { x: -999, y: -999, a: 0 }, waves = [];
-    for (let l = -1.2; l <= 1.65; l += .12) LEVELS.push(l);
+    for (let l = -1.2; l <= 1.65; l += opts.step) LEVELS.push(l);
     let C = h.colors(), CELL, cols, rows, field;
     return {
-      resize(W, H) { CELL = Math.max(6, 14 * h.s); cols = Math.ceil(W / CELL) + 1; rows = Math.ceil(H / CELL) + 1; field = new Float32Array(cols * rows); },
+      resize(W, H) { CELL = Math.max(4, opts.cell * h.s); cols = Math.ceil(W / CELL) + 1; rows = Math.ceil(H / CELL) + 1; field = new Float32Array(cols * rows); },
       theme() { C = h.colors(); },
       down(x, y) { waves.push({ x, y, t0: performance.now() }); if (waves.length > 4) waves.shift(); },
       frame(now) {
-        const { ctx, W, H, P, s } = h, t = now / 1000 * .02, SC = 1 / (420 * s);
+        const { ctx, W, H, P, s } = h, t = now / 1000 * .02 * opts.speed, SC = 1 / (420 * s);
         const on = P.x > -999;
         if (on && m.x < -900) { m.x = P.x; m.y = P.y; }
         m.x += ((on ? P.x : m.x) - m.x) * .12; m.y += ((on ? P.y : m.y) - m.y) * .12; m.a += ((on ? 1 : 0) - m.a) * .06;
@@ -21,7 +27,7 @@ MH.register({
         for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
           const px = i * CELL, py = j * CELL, wx = px * SC, wy = py * SC;
           let v = noise(wx + t, wy) * 1.1 + noise(wx * 2.1 - t * .7, wy * 2.1 + 9) * .45;
-          if (m.a > .01) { const dx = px - m.x, dy = py - m.y; v += .9 * m.a * Math.exp(-(dx * dx + dy * dy) / R2); }
+          if (m.a > .01) { const dx = px - m.x, dy = py - m.y; v += opts.hill * m.a * Math.exp(-(dx * dx + dy * dy) / R2); }
           for (const w of live) {
             const age = (now - w.t0) / 1000, d = Math.hypot(px - w.x, py - w.y), front = age * 420 * s;
             if (Math.abs(d - front) < 160 * s) v += .35 * Math.cos((d - front) / (26 * s)) * Math.exp(-(((d - front) / (90 * s)) ** 2)) * (1 - age / 2.6);

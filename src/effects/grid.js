@@ -3,20 +3,25 @@
 // ───── 坐标网格：坐标纸 + 十字准线 + 坐标读数；鼠标经过的格子“加热”，四角亮起角标后慢慢冷却 ─────
 MH.register({
   id: 'grid', name: '坐标网格', cat: '背景', tech: 'Canvas 2D · Heat Decay',
-  desc: '坐标纸背景，鼠标拖出十字准线和实时坐标；经过的格子四角亮起红色角标，再慢慢暗下去。',
+  desc: '坐标纸背景，鼠标拖出十字准线和实时坐标；经过的格子四角亮起强调色角标，再慢慢暗下去。',
+  params: [
+    { k: 'size', label: '格子大小', type: 'range', min: 16, max: 96, step: 2, def: 40, unit: 'px' },
+    { k: 'major', label: '粗线间隔', type: 'range', min: 2, max: 8, step: 1, def: 4, unit: '格' },
+    { k: 'decay', label: '余热保留', type: 'range', min: 0.85, max: 0.99, step: 0.005, def: 0.955 },
+  ],
   mount: (el, opts) => MH.canvasHost(el, opts, h => {
     let C = h.colors(), S, cols, rows, heat;
     const m = { px: -999, py: -999 };
     return {
-      resize(W, H) { S = Math.max(16, 40 * h.s); cols = Math.ceil(W / S) + 1; rows = Math.ceil(H / S) + 1; heat = new Float32Array(cols * rows); },
+      resize(W, H) { S = Math.max(10, opts.size * h.s); cols = Math.ceil(W / S) + 1; rows = Math.ceil(H / S) + 1; heat = new Float32Array(cols * rows); },
       theme() { C = h.colors(); },
       frame() {
         const { ctx, W, H, P, s } = h, on = P.x > -999;
         ctx.clearRect(0, 0, W, H); ctx.strokeStyle = C.dim; ctx.lineWidth = 1;
         for (let pass = 0; pass < 2; pass++) {
           ctx.globalAlpha = pass ? (C.night ? .22 : .26) : (C.night ? .07 : .09); ctx.beginPath();
-          for (let i = 0; i < cols; i++) if ((i % 4 === 0) === !!pass) { ctx.moveTo(i * S + .5, 0); ctx.lineTo(i * S + .5, H); }
-          for (let j = 0; j < rows; j++) if ((j % 4 === 0) === !!pass) { ctx.moveTo(0, j * S + .5); ctx.lineTo(W, j * S + .5); }
+          for (let i = 0; i < cols; i++) if ((i % opts.major === 0) === !!pass) { ctx.moveTo(i * S + .5, 0); ctx.lineTo(i * S + .5, H); }
+          for (let j = 0; j < rows; j++) if ((j % opts.major === 0) === !!pass) { ctx.moveTo(0, j * S + .5); ctx.lineTo(W, j * S + .5); }
           ctx.stroke();
         }
         if (on && m.px > -999) { // 沿移动路径加热，快速划过也不跳格
@@ -30,7 +35,7 @@ MH.register({
         ctx.strokeStyle = C.accent; ctx.lineWidth = 1.5;
         for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
           const v = heat[j * cols + i]; if (v < .02) continue;
-          heat[j * cols + i] = v * .955;
+          heat[j * cols + i] = v * opts.decay;
           const x = i * S, y = j * S, L = (6 + v * 4) * s;
           ctx.globalAlpha = v * .9; ctx.beginPath();
           ctx.moveTo(x, y + L); ctx.lineTo(x, y); ctx.lineTo(x + L, y);

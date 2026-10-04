@@ -2,6 +2,9 @@
 MH.register({
   id: 'sun-moon', name: '太阳月亮开关', cat: '交互', tech: 'SVG Mask · CSS Transform',
   desc: '深浅模式开关的图标：浅色时是月亮（点了变深色），深色时是太阳；切换时光芒收起、圆被咬掉一口变成月牙。',
+  params: [
+    { k: 'interval', label: '自动演示间隔', type: 'range', min: 600, max: 5000, step: 100, def: 1800, unit: 'ms' },
+  ],
   mount(el, opts) {
     const rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<line x1="12" y1="2.5" x2="12" y2="4.5" transform="rotate(${a} 12 12)"/>`).join('');
     const id = 'sm' + Math.random().toString(36).slice(2, 7);
@@ -9,7 +12,7 @@ MH.register({
     const box = el.lastElementChild, btn = box.querySelector('.sm');
     let running = false, timer = 0, lastReal = -1e9;
     btn.addEventListener('click', () => { lastReal = performance.now(); btn.classList.toggle('moon'); });
-    const auto = () => { if (!running) return; if (performance.now() - lastReal > 3000) btn.classList.toggle('moon'); timer = setTimeout(auto, 1800); };
+    const auto = () => { if (!running) return; if (performance.now() - lastReal > 3000) btn.classList.toggle('moon'); timer = setTimeout(auto, opts.interval); };
     return { pause() { running = false; clearTimeout(timer); }, resume() { if (running || MH.still()) return; running = true; timer = setTimeout(auto, 1200); }, destroy() { this.pause(); box.remove(); } };
   },
 });

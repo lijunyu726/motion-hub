@@ -9,10 +9,20 @@
 //   desc    一句话说明
 //   mount(el, opts) → { pause(), resume(), destroy() }
 //     el 是一个已经有尺寸的容器；opts.expanded 为 true 表示全屏体验（关掉幽灵光标、允许滚轮等）
+//   params  可调参数（可选），实验台据此生成参数面板，每项 { k, label, type, def, ... }：
+//     type 'range'：数值滑块，带 min / max / step，可选 unit；'text'：单行文字；'lines'：多行文字，一行一项
+//     mount 拿到的 opts 已经按 def 补齐（register 里包了一层），效果代码直接读 opts.k 即可
 window.MH = (() => {
   const effects = [];
   // 记下效果来自哪个文件（复制代码时只带这个文件）
-  const register = e => { const src = document.currentScript && document.currentScript.src; e.file = e.file || (src ? src.split('/').pop() : ''); effects.push(e); };
+  const register = e => {
+    const src = document.currentScript && document.currentScript.src; e.file = e.file || (src ? src.split('/').pop() : '');
+    if (e.params) { const m = e.mount; e.mount = (el, opts = {}) => m.call(e, el, { ...defaults(e), ...opts }); }
+    effects.push(e);
+  };
+  const defaults = e => Object.fromEntries((e.params || []).map(p => [p.k, p.def]));
+  // 'lines' 参数：数组原样返回；字符串按行拆开，去掉空行
+  const lines = v => Array.isArray(v) ? v : String(v || '').split('\n').map(x => x.trim()).filter(Boolean);
   const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, k) => a + (b - a) * k;
@@ -115,5 +125,5 @@ window.MH = (() => {
     for (const name of ['--vr', '--vw']) { try { CSS.registerProperty({ name, syntax: '<length>', inherits: false, initialValue: '0px' }); } catch (e) { /* 已注册 */ } }
   }
 
-  return { effects, register, still, clamp, lerp, ease, hash, perlin, fit, colors, tween, scaleOf, ghostAt, canvasHost };
+  return { effects, register, defaults, lines, still, clamp, lerp, ease, hash, perlin, fit, colors, tween, scaleOf, ghostAt, canvasHost };
 })();

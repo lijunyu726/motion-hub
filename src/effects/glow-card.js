@@ -4,6 +4,9 @@
 MH.register({
   id: 'glow-card', name: '边框高光卡片', cat: '交互', tech: 'CSS Mask · mask-composite · 3D Tilt',
   desc: '指针在卡片上移动时，边框沿着指针亮起一段光，卡片同时朝指针方向轻轻倾斜。',
+  params: [
+    { k: 'tilt', label: '倾斜角度', type: 'range', min: 0, max: 25, step: 1, def: 10, unit: '°' },
+  ],
   mount(el, opts) {
     el.insertAdjacentHTML('beforeend', `<div class="gc-wrap">${['01', '02', '03'].map((n, i) => `<div class="gc"><span>${n}</span><b>${['等高线', '点阵扩散', '拉扯翻页'][i]}</b><em>${['背景', '过渡', '翻页'][i]}</em></div>`).join('')}</div>`);
     const wrap = el.lastElementChild, cards = [...wrap.children];
@@ -16,7 +19,7 @@ MH.register({
           c.classList.toggle('hot', inside);
           if (inside) {
             c.style.setProperty('--mx', x + 'px'); c.style.setProperty('--my', y + 'px');
-            if (!MH.still()) c.style.transform = `rotateX(${(.5 - y / r.height) * 8}deg) rotateY(${(x / r.width - .5) * 10}deg)`;
+            if (!MH.still()) c.style.transform = `rotateX(${(.5 - y / r.height) * opts.tilt * .8}deg) rotateY(${(x / r.width - .5) * opts.tilt}deg)`;
           } else c.style.transform = '';
         }
       },

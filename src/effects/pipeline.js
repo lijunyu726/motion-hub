@@ -2,8 +2,12 @@
 MH.register({
   id: 'pipeline', name: '校验链', cat: '交互', tech: 'SVG · Staged Easing',
   desc: '一次操作依次经过多道检查：小点在每道关前减速、通过后点亮，适合解释流程或状态机。',
+  params: [
+    { k: 'gates', label: '关卡（一行一个）', type: 'lines', def: '计划\n身份\n权限\n状态\n幂等\n限流\n审计' },
+    { k: 'period', label: '一轮时长', type: 'range', min: 2000, max: 15000, step: 250, def: 7000, unit: 'ms' },
+  ],
   mount(el, opts) {
-    const G = opts.gates || ['计划', '身份', '权限', '状态', '幂等', '限流', '审计'];
+    const G = MH.lines(opts.gates).length > 1 ? MH.lines(opts.gates) : ['开始', '结束'];
     el.insertAdjacentHTML('beforeend', `<div class="pl"><svg></svg></div>`);
     const box = el.lastElementChild, svg = box.querySelector('svg');
     let gates, labels, pl, tk, x;
@@ -18,7 +22,7 @@ MH.register({
     const ro = new ResizeObserver(build); ro.observe(box); build();
     const set = p => { const px = x(0) + p * (x(1) - x(0)); pl.setAttribute('x2', px); tk.setAttribute('cx', px); gates.forEach((g, i) => { g.classList.toggle('on', p >= i - .02); labels[i].classList.toggle('on', p >= i - .02); }); };
     let running = false, raf = 0;
-    const N = G.length - 1, T = 7000;
+    const N = G.length - 1, T = opts.period;
     const loop = now => {
       if (!running) return;
       const raw = Math.min((now % T) / T * 1.25, 1) * N, i = Math.floor(raw), f = raw - i;

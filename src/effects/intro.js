@@ -7,14 +7,19 @@ MH.register({
   id: 'intro', name: '点阵拼字片头', cat: '片头', tech: 'Canvas 2D · Pure-Function Timeline · Text Sampling',
   desc: '网格点亮起，屏幕外的点飞进来拼成文字，字幕依次闪过并荡开波纹；播完定格。点一下重播。',
   usage: `MH.effects.find(e => e.id === 'intro').mount(el, { text: 'LJY', captions: ['…'] }).resume();`,
+  params: [
+    { k: 'text', label: '拼出的文字', type: 'text', def: 'LJY' },
+    { k: 'captions', label: '字幕（一行一条）', type: 'lines', def: '背景\n过渡\n翻页\n交互' },
+    { k: 'gap', label: '点间距', type: 'range', min: 10, max: 40, step: 1, def: 22, unit: 'px' },
+  ],
   mount(el, opts) {
-    const TEXT = opts.text || 'LJY', CAPS = opts.captions || ['背景', '过渡', '翻页', '交互'];
+    const TEXT = opts.text || 'LJY', CAPS = MH.lines(opts.captions);
     const T_END = 6.8, HOLD = 2.6, { clamp, hash } = MH;
     const ease = t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
     const PULSES = [1.0, 3.4, 4.05, 4.7, 5.35], CAP_AT = k => 3.4 + k * .65;
     let L = null, C, t0 = performance.now();
     const layout = (W, H, s) => {
-      const GAP = Math.max(8, 22 * s), cx = W / 2, cy = H * .44, fs = Math.min(H * .42, W * .3);
+      const GAP = Math.max(6, opts.gap * s), cx = W / 2, cy = H * .44, fs = Math.min(H * .42, W * .3);
       const off = document.createElement('canvas'); off.width = Math.ceil(W); off.height = Math.ceil(H);
       const c = off.getContext('2d');
       c.font = `700 ${fs}px "Iowan Old Style", Palatino, Georgia, serif`;

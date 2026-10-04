@@ -4,6 +4,10 @@
 MH.register({
   id: 'follow-tip', name: '跟随信息卡', cat: '交互', tech: 'Lerp · Pointer Tracking',
   desc: '悬停在某一行时，信息卡带着一点“拖拽感”跟随指针，靠近边缘会自动翻到另一侧。',
+  params: [
+    { k: 'lag', label: '跟随灵敏度', type: 'range', min: 0.04, max: 1, step: 0.01, def: 0.18 },
+    { k: 'offset', label: '离指针距离', type: 'range', min: 0, max: 60, step: 1, def: 18, unit: 'px' },
+  ],
   mount(el, opts) {
     const ROWS = [['01', '等高线', 'Canvas · Marching Squares'], ['02', '磁性点阵', 'Canvas · 弹簧阻尼'], ['03', '风场', 'Canvas · 粒子'], ['04', '拉扯翻页', 'DOM 切条']];
     el.insertAdjacentHTML('beforeend', `<div class="ft">${ROWS.map(([n, t]) => `<div class="ft-row"><span>${n}</span><b>${t}</b></div>`).join('')}<div class="ft-tip"><em></em><i></i></div></div>`);
@@ -16,8 +20,8 @@ MH.register({
         tip.classList.toggle('on', i >= 0);
         rows.forEach((r, k) => r.classList.toggle('hot', k === i));
         if (i >= 0) { tip.querySelector('em').textContent = `${ROWS[i][0]} / 0${ROWS.length}`; tip.querySelector('i').textContent = ROWS[i][2]; }
-        const tw = tip.offsetWidth, tx = h.P.x + (h.P.x > W - tw - 30 ? -tw - 14 : 18), ty = h.P.y + 16;
-        const k = MH.still() ? 1 : .18; p.x += (tx - p.x) * k; p.y += (ty - p.y) * k;
+        const tw = tip.offsetWidth, tx = h.P.x + (h.P.x > W - tw - 30 ? -tw - opts.offset : opts.offset), ty = h.P.y + opts.offset;
+        const k = MH.still() ? 1 : opts.lag; p.x += (tx - p.x) * k; p.y += (ty - p.y) * k;
         tip.style.translate = `${p.x}px ${p.y}px`;
       },
     }), { canvas: false });

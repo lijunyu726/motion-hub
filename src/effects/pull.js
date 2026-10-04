@@ -5,8 +5,13 @@ MH.register({
   id: 'pull', name: '拉扯翻页', cat: '翻页', tech: 'DOM Slicing · Exponential Decay · Pointer Drag',
   desc: '往下翻，当前页的信息先被扯长，再整体拽走；往上翻，上一页从底部被拉上来。也可以按住拖动，拖过两成或甩得够快就翻页，否则弹回。',
   usage: `const deck = MH.effects.find(e => e.id === 'pull').mount(el, { slides: ['…', '…'] });\ndeck.resume();`,
+  params: [
+    { k: 'slides', label: '每页内容（一行一页：标题 | 说明）', type: 'lines', def: '背景 | 等高线 · 点阵 · 风场 · 网格\n过渡 | 11 种深浅切换\n翻页 | 拉扯翻页\n交互 | 片头 · 开关 · 卡片 · 光标' },
+  ],
   mount(el, opts) {
-    const PAGES = opts.slides || [['01', '背景', '等高线 · 点阵 · 风场 · 网格'], ['02', '过渡', '11 种深浅切换'], ['03', '翻页', '拉扯翻页'], ['04', '交互', '片头 · 开关 · 卡片 · 光标']];
+    // slides 可以是 [[编号, 标题, 说明], …]，也可以是“标题 | 说明”一行一页的文字
+    const PAGES = MH.lines(opts.slides).map((l, i) => Array.isArray(l) ? l : [String(i + 1).padStart(2, '0'), ...l.split('|').map(x => x.trim())].concat('').slice(0, 3));
+    if (!PAGES.length) PAGES.push(['01', '', '']);
     el.insertAdjacentHTML('beforeend', `<div class="pd">${PAGES.map(([n, t, d]) => `<section class="pd-slide"><div class="pd-n">${n}</div><div><h3>${t}</h3><p>${d}</p></div></section>`).join('')}<div class="pd-pn"></div></div>`);
     const box = el.lastElementChild, slides = [...box.querySelectorAll('.pd-slide')], pn = box.querySelector('.pd-pn');
     const { clamp, lerp, ease, tween } = MH;

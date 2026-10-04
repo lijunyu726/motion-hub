@@ -50,6 +50,7 @@
         <div class="tech" id="tech"></div>
         <div class="act"><button id="reset" type="button">↻ 重置</button><button id="full" type="button">⛶ 全屏</button></div>
       </div>
+      <div class="params" id="params" aria-label="参数"></div>
       <div class="use"><pre id="use"></pre><div class="copies"><button class="copy p" id="copy" type="button">复制 Prompt + 代码</button></div></div>
     </section>
   </main>
@@ -77,17 +78,52 @@ $('list').innerHTML = CATS.map(c => {
 
 // 舞台：同一时间只运行一个效果；切换时销毁旧的
 let cur = null, inst = null;
-function select(id, push = true) {
-  const e = list.find(x => x.id === id) || list[0];
+// 参数：每个效果调过的值单独记着（切走再切回来还在）；强调色是所有效果共用的
+const vals = {};
+let accent = '';
+const valsOf = e => ({ ...MH.defaults(e), ...vals[e.id] });
+// 把效果挂到舞台上（切换效果、改参数时都走这里）
+function run(e) {
   if (inst) inst.destroy();
   $('stage').replaceChildren();
-  cur = e; inst = e.mount($('stage'), {}); inst.resume();
+  accent ? $('stage').style.setProperty('--accent', accent) : $('stage').style.removeProperty('--accent');
+  inst = e.mount($('stage'), { ...vals[e.id] }); inst.resume();
+}
+function select(id, push = true) {
+  const e = list.find(x => x.id === id) || list[0];
+  cur = e; run(e); renderParams(e);
   document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b.dataset.id === e.id));
   document.querySelector(`#list button[data-id="${e.id}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest' });
   $('cat').textContent = `${e.cat} · ${CAT_EN[e.cat]}`; $('name').textContent = e.name; $('desc').textContent = e.desc; $('tech').textContent = e.tech;
   showCode(e);
   if (push && location.hash !== '#' + e.id) history.replaceState(null, '', '#' + e.id);
 }
+// 参数面板：按效果的 params 生成控件；改动后稍等一下再重新挂载（拖滑块时不至于每一帧都重建），代码区跟着更新
+const esc = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+const fmt = (p, v) => p.type === 'range' ? `${+(+v).toFixed(3)}${p.unit || ''}` : '';
+function renderParams(e) {
+  const v = valsOf(e), ps = e.params || [];
+  $('params').innerHTML = `<div class="ph"><b>参数</b><span>Params</span><button type="button" id="preset">恢复默认</button></div>` +
+    ps.map(p => `<label class="pr"><span>${p.label}<em>${fmt(p, v[p.k])}</em></span>` + (
+      p.type === 'range' ? `<input type="range" data-k="${p.k}" min="${p.min}" max="${p.max}" step="${p.step}" value="${v[p.k]}">`
+      : p.type === 'lines' ? `<textarea data-k="${p.k}" rows="3" spellcheck="false">${esc(v[p.k])}</textarea>`
+      : `<input type="text" data-k="${p.k}" value="${esc(v[p.k])}" spellcheck="false">`) + `</label>`).join('') +
+    `<label class="pr pc"><span>强调色<em>${accent || '默认'}</em></span><input type="color" id="accent" value="${accent || getComputedStyle($('stage')).getPropertyValue('--accent').trim()}"></label>`;
+}
+let rerun = 0;
+const later = (ms, e) => { clearTimeout(rerun); rerun = setTimeout(() => { if (cur === e) { run(e); showCode(e, true); } }, ms); };
+$('params').addEventListener('input', ev => {
+  const t = ev.target, e = cur;
+  if (t.id === 'accent') { accent = t.value; t.previousElementSibling.querySelector('em').textContent = accent; return later(60, e); }
+  const p = (e.params || []).find(x => x.k === t.dataset.k); if (!p) return;
+  (vals[e.id] = vals[e.id] || {})[p.k] = p.type === 'range' ? +t.value : t.value;
+  if (p.type === 'range') t.previousElementSibling.querySelector('em').textContent = fmt(p, t.value);
+  later(p.type === 'range' ? 120 : 400, e);
+});
+$('params').addEventListener('click', ev => {
+  if (ev.target.id !== 'preset') return;
+  delete vals[cur.id]; accent = ''; renderParams(cur); run(cur); showCode(cur, true);
+});
 // 完整代码：把配色和效果样式、核心、这个效果所在的文件拼成一个能直接打开的 .html。
 // 源文件内容优先从 src/sources.js（预先打包的字符串）取，所以双击 file:// 打开也能用；取不到再用 fetch。
 const SRC = {};
@@ -125,6 +161,9 @@ ${list(P.params)}
   【注意】
 ${list(notes)}
 
+  【opts 参数】（mount 的第二个参数，不传就用默认值；文件末尾的 mount 调用里是你在 Motion Hub 上调好的值）
+${(e.params || []).map(p => `  - ${p.k}：${p.label}，默认 ${JSON.stringify(p.def)}${p.type === 'range' ? `（${p.min}–${p.max}${p.unit || ''}）` : ''}`).join('\n') || '  - 无'}
+
   【代码结构】
   - <style>：配色变量和这个效果用到的样式
   - 第一段 <script>：MH 核心（注册表、噪声、缓动；canvasHost 负责画布尺寸、指针坐标、动画循环和暂停）
@@ -134,9 +173,12 @@ ${list(notes)}
 }
 async function fullCode(e) {
   const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read('src/effects/' + e.file)]);
-  const run = e.cat === '过渡'
-    ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();\n// 整页深浅切换（View Transitions，点一次切一次）：\n// MH.bindThemeToggle(button, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}');`
-    : `MH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), {}).resume();`;
+  // 带上实验台里调好的参数；多行文字参数写成数组，方便阅读和修改
+  const v = valsOf(e), o = Object.fromEntries((e.params || []).map(p => [p.k, p.type === 'lines' ? MH.lines(v[p.k]) : v[p.k]]));
+  const opts = JSON.stringify(o, null, 2), color = accent ? `document.documentElement.style.setProperty('--accent', '${accent}');\n` : '';
+  const run = color + (e.cat === '过渡'
+    ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), ${opts}).resume();\n// 整页深浅切换（View Transitions，过渡播完前再点不生效）：\n// MH.bindThemeToggle(button, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}', { dur: ${o.dur} });`
+    : `MH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), ${opts}).resume();`);
   return `<!doctype html>
 ${header(e)}
 <html lang="zh-CN">
@@ -165,8 +207,8 @@ ${run}
 </html>
 `;
 }
-async function showCode(e) {
-  $('use').textContent = '正在生成…';
+async function showCode(e, update = false) {
+  if (!update) $('use').textContent = '正在生成…';
   try { const t = await fullCode(e); if (cur === e) { $('use').textContent = t; document.querySelectorAll('.copies button').forEach(b => b.disabled = false); } }
   catch (err) { $('use').textContent = '读取源码失败：' + err.message; document.querySelectorAll('.copies button').forEach(b => b.disabled = true); }
 }
@@ -174,13 +216,14 @@ $('list').addEventListener('click', ev => { const b = ev.target.closest('button[
 // 上下方向键切换效果；当前是拉扯翻页时，方向键交给它翻页
 addEventListener('keydown', ev => {
   if (cur && cur.id === 'pull') return;
+  if (ev.target.closest && ev.target.closest('input, textarea')) return; // 在参数面板里输入或拖滑块时不切换效果
   if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
   ev.preventDefault();
   const i = list.indexOf(cur), j = (i + (ev.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length;
   select(list[j].id);
 });
 addEventListener('hashchange', () => select(location.hash.slice(1), false));
-$('reset').addEventListener('click', () => select(cur.id));
+$('reset').addEventListener('click', () => run(cur));
 $('full').addEventListener('click', () => { const s = $('stage'); document.fullscreenElement ? document.exitFullscreen() : s.requestFullscreen && s.requestFullscreen(); });
 const copyWith = (id, make, ok) => $(id).addEventListener('click', async () => {
   const b = $(id), t0 = b.textContent;

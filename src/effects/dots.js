@@ -7,7 +7,7 @@ function dotField(quiet) {
     const waves = [];
     return {
       resize(W, H) {
-        GAP = Math.max(10, 26 * h.s); R = (quiet ? 110 : 150) * h.s; dots = [];
+        GAP = Math.max(8, opts.gap * h.s); R = opts.radius * h.s; dots = [];
         const ox = (W % GAP) / 2, oy = (H % GAP) / 2;
         for (let y = oy; y < H; y += GAP) for (let x = ox; x < W; x += GAP) dots.push({ hx: x, hy: y, x, y, vx: 0, vy: 0 });
       },
@@ -24,7 +24,7 @@ function dotField(quiet) {
             const g = Math.exp(-(((wd - front) / (40 * s)) ** 2)) * (1 - age / 1.8) * 1.3 * s;
             if (g > .01 && wd > 1) { d.vx += wx / wd * g; d.vy += wy / wd * g; }
           }
-          d.vx += (d.hx - d.x) * .06; d.vy += (d.hy - d.y) * .06; d.vx *= .82; d.vy *= .82; d.x += d.vx; d.y += d.vy;
+          d.vx += (d.hx - d.x) * opts.spring; d.vy += (d.hy - d.y) * opts.spring; d.vx *= opts.damping; d.vy *= opts.damping; d.x += d.vx; d.y += d.vy;
           const off = Math.hypot(d.x - d.hx, d.y - d.hy) / s;
           const breathe = quiet ? 0 : Math.sin(d.hx * .012 / s + d.hy * .008 / s - t * 1.2) * .25;
           const r = Math.min(1.1 + breathe + off * (quiet ? .06 : .09), quiet ? 2.4 : 3.6) * Math.max(.7, s);
@@ -38,5 +38,12 @@ function dotField(quiet) {
     };
   });
 }
-MH.register({ id: 'dots', name: '磁性点阵', cat: '背景', tech: 'Canvas 2D · Spring-Damper Physics', desc: '整屏点阵被鼠标推开再弹回，推开的点变大、变成强调色；点击发出一圈冲击波。', mount: dotField(false) });
-MH.register({ id: 'dots-quiet', name: '安静点阵', cat: '背景', tech: 'Canvas · 弹簧阻尼', desc: '同一套点阵的阅读版：点更淡、推开的范围和力度更小，没有冲击波，适合长文页面。', mount: dotField(true) });
+// 可调参数：点间距、推开半径、弹簧刚度（拉回的力）、阻尼（每帧保留的速度，越大越“弹”）
+const dotParams = radius => [
+  { k: 'gap', label: '点间距', type: 'range', min: 12, max: 60, step: 1, def: 26, unit: 'px' },
+  { k: 'radius', label: '推开半径', type: 'range', min: 40, max: 320, step: 5, def: radius, unit: 'px' },
+  { k: 'spring', label: '弹簧刚度', type: 'range', min: 0.01, max: 0.2, step: 0.005, def: 0.06 },
+  { k: 'damping', label: '阻尼', type: 'range', min: 0.6, max: 0.95, step: 0.01, def: 0.82 },
+];
+MH.register({ id: 'dots', name: '磁性点阵', cat: '背景', tech: 'Canvas 2D · Spring-Damper Physics', desc: '整屏点阵被鼠标推开再弹回，推开的点变大、变成强调色；点击发出一圈冲击波。', params: dotParams(150), mount: dotField(false) });
+MH.register({ id: 'dots-quiet', name: '安静点阵', cat: '背景', tech: 'Canvas 2D · Spring-Damper Physics', params: dotParams(110), desc: '同一套点阵的阅读版：点更淡、推开的范围和力度更小，没有冲击波，适合长文页面。', mount: dotField(true) });

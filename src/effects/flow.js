@@ -4,21 +4,27 @@
 MH.register({
   id: 'flow', name: '风场', cat: '背景', tech: 'Canvas 2D · Particles · Noise Flow Field',
   desc: '几千个粒子顺着看不见的风流动，留下淡淡的拖尾；鼠标附近被卷成漩涡，经过的粒子变成强调色。',
+  params: [
+    { k: 'density', label: '粒子密度', type: 'range', min: 0.2, max: 3, step: 0.1, def: 1, unit: '×' },
+    { k: 'speed', label: '流速', type: 'range', min: 0.2, max: 4, step: 0.1, def: 1.1 },
+    { k: 'fade', label: '拖尾消退', type: 'range', min: 0.02, max: 0.3, step: 0.01, def: 0.07 },
+    { k: 'swirl', label: '漩涡半径', type: 'range', min: 40, max: 400, step: 10, def: 180, unit: 'px' },
+  ],
   mount: (el, opts) => MH.canvasHost(el, opts, h => {
     const noise = MH.perlin(11);
     let C = h.colors(), ps = [];
     const spawn = p => { p.x = Math.random() * h.W; p.y = Math.random() * h.H; p.life = 80 + Math.random() * 160; p.hot = 0; return p; };
     return {
-      resize(W, H) { ps = Array.from({ length: Math.round(W * H / (1100 * h.s * h.s)) }, () => spawn({})); },
+      resize(W, H) { ps = Array.from({ length: Math.round(W * H / (1100 * h.s * h.s) * opts.density) }, () => spawn({})); },
       theme() { C = h.colors(); h.ctx && h.ctx.clearRect(0, 0, h.W, h.H); },
       frame(now) {
-        const { ctx, W, H, P, s } = h, t = now / 1000, SC = 380 * s, R2 = 32000 * s * s;
-        ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.07)'; ctx.fillRect(0, 0, W, H);
+        const { ctx, W, H, P, s } = h, t = now / 1000, SC = 380 * s, R2 = (opts.swirl * s) ** 2;
+        ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = `rgba(0,0,0,${opts.fade})`; ctx.fillRect(0, 0, W, H);
         ctx.globalCompositeOperation = 'source-over';
         const cold = new Path2D(), warm = new Path2D();
         for (const p of ps) {
           const a = noise(p.x / SC + t * .03, p.y / SC) * Math.PI * 2.4;
-          let vx = Math.cos(a) * 1.1 * s, vy = Math.sin(a) * 1.1 * s;
+          let vx = Math.cos(a) * opts.speed * s, vy = Math.sin(a) * opts.speed * s;
           const dx = p.x - P.x, dy = p.y - P.y, d2 = dx * dx + dy * dy;
           if (d2 < R2) { const d = Math.sqrt(d2) + 1, f = (1 - d2 / R2) * 5 * s; vx += -dy / d * f + dx / d * f * .25; vy += dx / d * f + dy / d * f * .25; p.hot = 1; }
           p.hot *= .97;

@@ -76,7 +76,7 @@
         if (MH.still()) return settle();
         const quiet = () => {}; // 被打断时动画会被 cancel，finished 会 reject，忽略即可
         if (id === 'flip') {
-          const o = { duration: fx.dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
+          const o = { duration: opts.dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
           top.style.visibility = 'hidden';
           const a1 = bottom.animate([{ transform: 'rotateY(0)' }, { transform: 'rotateY(90deg)' }], o); anims.push(a1);
           a1.finished.then(() => {
@@ -86,7 +86,7 @@
             a2.finished.then(settle, quiet);
           }, quiet);
         } else {
-          const a = top.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE, fill: 'forwards' }); anims.push(a);
+          const a = top.animate(fx.shape(x, y, R, W, H, s), { duration: opts.dur, easing: EASE, fill: 'forwards' }); anims.push(a);
           a.finished.then(settle, quiet);
         }
       };
@@ -96,7 +96,7 @@
       const auto = () => {
         if (!running) return;
         if (!opts.expanded && performance.now() - lastReal > 3000) { const g = MH.ghostAt(performance.now(), box.clientWidth, box.clientHeight, MH.hash(id.length)); play(g.x, g.y); }
-        timer = setTimeout(auto, 2600 + fx.dur);
+        timer = setTimeout(auto, 2600 + opts.dur);
       };
       return {
         pause() { running = false; clearTimeout(timer); },
@@ -106,15 +106,17 @@
     };
   }
   for (const [id, fx] of Object.entries(FX)) {
-    MH.register({ id: `theme-${id}`, name: fx.name, cat: '过渡', tech: 'View Transitions API · ' + (id === 'flip' ? 'WAAPI · 3D Transform' : (/dots|blinds|halftone|soft/.test(id) ? 'CSS Mask · @property' : 'WAAPI · clip-path')), desc: fx.desc + ' 点画面任意位置触发。', mount: mountTransition(id) });
+    MH.register({ id: `theme-${id}`, name: fx.name, cat: '过渡', tech: 'View Transitions API · ' + (id === 'flip' ? 'WAAPI · 3D Transform' : (/dots|blinds|halftone|soft/.test(id) ? 'CSS Mask · @property' : 'WAAPI · clip-path')), desc: fx.desc + ' 点画面任意位置触发。',
+      params: [{ k: 'dur', label: '时长', type: 'range', min: 200, max: 2400, step: 50, def: fx.dur, unit: 'ms' }], mount: mountTransition(id) });
   }
 
   // ───── 真实网站用：整页深浅切换 ─────
   // apply() 负责真正改主题（例如切换 <html data-theme>）；不支持 View Transitions 或减少动态效果时直接调用 apply()。
   // 过渡播完之前再点不生效，等这一次播完才能再切。
   let active = null;
-  MH.themeSwitch = (e, apply, id = 'dots') => {
-    const fx = FX[id] || FX.dots, root = document.documentElement;
+  // o.dur 可以改时长（毫秒），不传就用这个效果的默认时长
+  MH.themeSwitch = (e, apply, id = 'dots', o = {}) => {
+    const fx = FX[id] || FX.dots, root = document.documentElement, dur = o.dur || fx.dur;
     if (!document.startViewTransition || MH.still()) return apply();
     if (active) return;
     const r = e.currentTarget && e.currentTarget.getBoundingClientRect ? e.currentTarget.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
@@ -125,17 +127,17 @@
     const vt = document.startViewTransition(apply); active = vt;
     vt.ready.then(() => {
       if (id === 'flip') {
-        const o = { duration: fx.dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
+        const o = { duration: dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
         root.animate([{ transform: 'perspective(1800px) rotateY(0)' }, { transform: 'perspective(1800px) rotateY(90deg)' }], { ...o, pseudoElement: '::view-transition-old(root)' });
-        root.animate([{ transform: 'perspective(1800px) rotateY(-90deg)' }, { transform: 'perspective(1800px) rotateY(0)' }], { ...o, delay: fx.dur / 2, pseudoElement: '::view-transition-new(root)' });
+        root.animate([{ transform: 'perspective(1800px) rotateY(-90deg)' }, { transform: 'perspective(1800px) rotateY(0)' }], { ...o, delay: dur / 2, pseudoElement: '::view-transition-new(root)' });
       } else if (fx.shape && id !== 'fade') {
         // fill: 'forwards'：停在最后一帧，否则过渡层撤掉前会有一帧遮罩归零，整屏闪回旧颜色
-        root.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE, fill: 'forwards', pseudoElement: '::view-transition-new(root)' });
+        root.animate(fx.shape(x, y, R, W, H, s), { duration: dur, easing: EASE, fill: 'forwards', pseudoElement: '::view-transition-new(root)' });
       }
     }).catch(() => {});
     vt.finished.finally(() => { if (active === vt) { active = null; delete root.dataset.vfx; } });
   };
   // 绑定深浅开关（过渡播完之前再点不生效）
-  MH.bindThemeToggle = (btn, apply, id = 'dots') => btn.addEventListener('click', e => MH.themeSwitch(e, apply, id));
+  MH.bindThemeToggle = (btn, apply, id = 'dots', o = {}) => btn.addEventListener('click', e => MH.themeSwitch(e, apply, id, o));
   MH.themeFx = Object.keys(FX);
 })();

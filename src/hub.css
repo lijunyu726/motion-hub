@@ -34,7 +34,7 @@ button{font:inherit;color:inherit}
 .main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
 .stage{position:relative;flex:1;min-height:360px;margin:10px 10px 0;border-radius:16px;overflow:hidden;background:var(--paper);container-type:size;touch-action:none}
 .stage:fullscreen{background:var(--paper);border-radius:0;margin:0}
-.info{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;height:248px;flex:none;padding:20px 22px 22px;overflow:hidden}
+.info{display:grid;grid-template-columns:1fr .95fr 1.1fr;gap:20px;height:268px;flex:none;padding:20px 22px 22px;overflow:hidden}
 .info>*{min-width:0}
 .info .cat{display:inline-block;padding:5px 10px;border-radius:999px;background:var(--hi);color:#111;font:800 11px/1 var(--ui);letter-spacing:.02em}
 .info h1{margin-top:10px;font:900 30px/1.15 var(--ui);letter-spacing:-.02em}
@@ -44,8 +44,24 @@ button{font:inherit;color:inherit}
 .info .act{margin-top:14px;display:flex;gap:8px}
 .info .act button{padding:9px 14px;border:none;border-radius:999px;background:var(--paper);cursor:pointer;font:600 13px/1 var(--ui)}
 .info .act button:hover{color:var(--accent)}
+/* 参数面板：每个效果自己的滑块 / 文字框，外加共用的强调色；内容多时在面板里滚动 */
+.params{display:flex;flex-direction:column;gap:10px;overflow:auto;padding:12px 14px;border-radius:16px;background:var(--paper)}
+.params .ph{display:flex;align-items:baseline;gap:8px}
+.params .ph b{font:800 13px/1 var(--ui)}
+.params .ph span{font:500 11px/1 var(--mono);color:var(--dim)}
+.params .ph button{margin-left:auto;padding:5px 10px;border:none;border-radius:999px;background:var(--paper2);cursor:pointer;font:700 11px/1 var(--ui);color:var(--dim)}
+.params .ph button:hover{color:var(--ink)}
+.pr{display:flex;flex-direction:column;gap:6px}
+.pr>span{display:flex;justify-content:space-between;gap:10px;font:600 12px/1.2 var(--ui);color:var(--body)}
+.pr em{font:500 11px/1.2 var(--mono);font-style:normal;color:var(--dim)}
+.pr input[type=range]{width:100%;accent-color:var(--accent)}
+.pr input[type=text],.pr textarea{width:100%;padding:7px 10px;border:1.5px solid transparent;border-radius:10px;background:var(--paper2);font:500 13px/1.45 var(--ui);color:var(--ink);resize:vertical}
+.pr input[type=text]:focus,.pr textarea:focus{outline:none;border-color:var(--accent)}
+.pc{flex-direction:row;align-items:center;justify-content:space-between}
+.pc>span{flex:1}
+.pc input[type=color]{width:34px;height:26px;padding:0;border:none;border-radius:8px;background:none;cursor:pointer}
 .use{position:relative}
-.use pre{height:100%;max-height:200px;overflow:auto;padding:14px 16px;border-radius:16px;background:var(--paper);font:500 12px/1.65 var(--mono);color:var(--body);white-space:pre-wrap;word-break:break-word}
+.use pre{height:100%;max-height:224px;overflow:auto;padding:14px 16px;border-radius:16px;background:var(--paper);font:500 12px/1.65 var(--mono);color:var(--body);white-space:pre-wrap;word-break:break-word}
 .use .copies{position:absolute;right:10px;top:10px;display:flex;gap:6px}
 .use .copy{padding:7px 12px;border:none;border-radius:999px;background:var(--paper2);cursor:pointer;font:700 11px/1 var(--ui);color:var(--dim)}
 .use .copy.p{background:var(--accent);color:var(--on-accent)}
@@ -70,5 +86,6 @@ html[data-hubfx]::view-transition-group(root){background:#0B0B0D}
   .stage{height:62vh;flex:none}
   .info{grid-template-columns:1fr;height:auto;padding:18px 16px}
   .info p{-webkit-line-clamp:unset}
+  .params{max-height:none}
   .ft-bar{height:auto;padding:14px 16px;flex-direction:column;align-items:flex-start;line-height:1.6}
 }
