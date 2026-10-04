@@ -59,7 +59,7 @@
 ## Agent Skill
 
 - `skill/motion-hub/` 由 `npm run skill`（`tools/build-skill.mjs`）生成，进仓库；不要手改，改效果 / 参数 / `prompts.js` 后重新生成。单文件是用无头 Chrome 打开实验台、调用页面里的 `fullCode()` 生成的，和“复制 Prompt + 代码”同一套逻辑（默认参数、不带强调色）。
-- 设计决策：Skill 自带全部代码，使用时不联网、不访问本站或仓库（作者确认）。原因：有的 Agent 运行环境不能联网；从网上取指令有被篡改的风险；仓库私有时 Agent 本来也访问不到。
+- 设计决策：Skill 自带全部代码，使用时不联网、不访问本站或仓库（作者确认）。原因：有的 Agent 运行环境不能联网；从网上取指令有被篡改的风险。
 - 部署时会重新生成并打成 `skill/motion-hub.zip`（不进仓库）放到网站上，实验台右上角「Skill ↓」下载。
 - 2026-10-04 用 Claude Code（`claude -p`）实测过：把 Skill 放进 `.claude/skills/`，让它“给首屏加等高线背景、强调色 #ff6600”，它会读 Skill 里的 contour 文件并改进页面，页面运行无报错。
 
@@ -69,7 +69,6 @@
 - nginx 由宝塔管理（`/www/server/nginx/sbin/nginx`，改完先 `-t` 再 `-s reload`），配置 `/www/server/panel/vhost/nginx/motion.lijunyu.com.cn.conf`，副本在 `deploy/nginx-motion.lijunyu.com.cn.conf`。手写配置，宝塔“网站”列表里看不到。
 - 证书：Let's Encrypt，用宝塔 `class/acme_v2.py --type http --path /www/wwwroot/panel_ssl_site` 签发（命令行运行要加 `PYTHONPATH=/www/server/panel:/www/server/panel/class`），复制到 `/www/server/panel/vhost/cert/motion.lijunyu.com.cn/`。宝塔每天的续签任务会替换 `vhost/cert/` 下同域名的证书并重载 nginx（看代码得出，还没实际经历过一次续签）。80 端口的 `/.well-known/acme-challenge/` 指向 `panel_ssl_site`，别删。
 - HTML / JS / CSS 是 `no-cache`（每次确认，没变返回 304），图片缓存 7 天。
-- 仓库目前私有，顶栏的 GitHub 链接对访客会是 404，公开仓库后才正常。
 
 ## 回退
 
