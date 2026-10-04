@@ -1,14 +1,14 @@
 /* @css base */
-/* Motion Hub 效果样式：配色变量（黑白朱砂：浅色纸白 + 朱砂红，深色纯黑 + 亮红）+ 各效果用到的样式 + 整页过渡遮罩。按“@css 名称”标记分段，复制代码时只带用到的段。 */
+/* Motion Hub 效果样式：配色变量（Acid：浅色暖灰 + 紫罗兰，深色近黑 + 酸橙绿）+ 各效果用到的样式 + 整页过渡遮罩。按“@css 名称”标记分段，复制代码时只带用到的段。 */
 :root{
-  --paper:#FAFAF7;--paper2:#EFEFEA;--ink:#0A0A0A;--body:#2B2B2B;--dim:#7B7B78;--rule:#DCDCD6;--accent:#C8281E;--on-accent:#fff;
+  --paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E;
   --serif:"Songti SC","STSong","Noto Serif SC",serif;
   --sans:"PingFang SC","Helvetica Neue","Noto Sans SC",sans-serif;
   --latin:"Iowan Old Style",Palatino,Georgia,serif;
   --mono:"SF Mono",Menlo,monospace;
 }
-[data-theme="night"]{--paper:#000000;--paper2:#0F0F0F;--ink:#FFFFFF;--body:#CFCFCF;--dim:#808080;--rule:#262626;--accent:#FF3B30;--on-accent:#fff}
-[data-theme="day"]{--paper:#FAFAF7;--paper2:#EFEFEA;--ink:#0A0A0A;--body:#2B2B2B;--dim:#7B7B78;--rule:#DCDCD6;--accent:#C8281E;--on-accent:#fff}
+[data-theme="night"]{--paper:#111113;--paper2:#1B1B1F;--ink:#F2F1F5;--body:#C4C2CC;--dim:#7E7B88;--rule:#2A2A30;--accent:#C6F21E;--on-accent:#111113;--hi:#8E75FF}
+[data-theme="day"]{--paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E}
 /* @css sm */
 /* ───── 深浅开关（和“太阳月亮开关”同一套图形） ───── */
 .sm{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid currentColor;background:none;cursor:pointer;color:var(--ink)}

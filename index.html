@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Motion Hub · 网页动效合集</title>
-<link rel="icon" href="data:,">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="description" content="网页动效合集：背景、深浅切换过渡、拉扯翻页、片头与小交互。原生 JavaScript（Vanilla JS），零依赖。">
 <script>
   // 先定深浅色再渲染，避免闪一下：默认浅色（不跟随系统），用户切过就记住
@@ -189,19 +189,46 @@ const copyWith = (id, make, ok) => $(id).addEventListener('click', async () => {
 });
 copyWith('copy', fullCode, '已复制：存成 .html 能运行，交给 AI 能改');
 
-// 深浅开关：图标和“太阳月亮开关”同一套；过渡固定为圆形揭开
+// 深浅开关：图标和“太阳月亮开关”同一套；过渡是实验台专用的“胶囊展开”
 (() => {
   const btn = $('mode'), rays = [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<line x1="12" y1="2.5" x2="12" y2="4.5" transform="rotate(${a} 12 12)"/>`).join('');
   btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><mask id="mode-mask"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><circle class="bite" cx="28" cy="2" r="7.5" fill="#000"/></mask><circle class="core" cx="12" cy="12" r="5" fill="currentColor" mask="url(#mode-mask)"/><g class="rays" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">${rays}</g></svg>`;
   const dark = () => document.documentElement.dataset.theme === 'night';
   const label = () => { const t = dark() ? '切换到浅色模式' : '切换到深色模式'; btn.classList.toggle('moon', !dark()); btn.title = t; btn.setAttribute('aria-label', t); };
   label();
-  // 实验台自己的深浅切换固定用圆形揭开，不跟着舞台上选中的效果变；点一次切一次，不用等过渡播完
-  MH.bindThemeToggle(btn, () => {
+  const go = () => {
     if (dark()) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = 'night';
     try { localStorage.setItem('mh-theme', dark() ? 'night' : 'day'); } catch (e) {}
     label();
-  }, 'circle');
+  };
+  // 实验台自己的深浅切换：胶囊展开（不用名单里那 11 个过渡）。
+  // 新页面的可见区域是一个圆角矩形：先从按钮处横向拉成一条和屏幕一样宽的胶囊，再上下撑满整屏、圆角收成 0；
+  // 旧页面同时以按钮为中心缩小一点、变暗，像往后退了一层。过渡播完之前再点不生效。
+  let busy = false;
+  btn.addEventListener('click', () => {
+    const root = document.documentElement;
+    if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return go();
+    if (busy) return;
+    const r = btn.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    const cy = r.top + r.height / 2, band = r.height * 1.6;
+    // inset(上 右 下 左 round 圆角)：四条边分别离屏幕边缘多远
+    const box = (t, rt, b, l, rad) => `inset(${t}px ${rt}px ${b}px ${l}px round ${rad}px)`;
+    root.dataset.hubfx = '';
+    root.style.setProperty('--hx', (r.left + r.width / 2) + 'px'); root.style.setProperty('--hy', cy + 'px');
+    busy = true;
+    const vt = document.startViewTransition(go);
+    vt.ready.then(() => {
+      const o = { duration: 900, fill: 'forwards' }; // fill：停在最后一帧，否则撤掉过渡层前会闪回旧颜色
+      root.animate([
+        { clipPath: box(r.top, W - r.right, H - r.bottom, r.left, r.height / 2), easing: 'cubic-bezier(.7,0,.3,1)' },
+        { clipPath: box(cy - band / 2, 0, H - cy - band / 2, 0, band / 2), offset: .42, easing: 'cubic-bezier(.6,0,.15,1)' },
+        { clipPath: box(0, 0, 0, 0, 0) }
+      ], { ...o, pseudoElement: '::view-transition-new(root)' });
+      root.animate([{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(.94)', filter: 'brightness(.7)' }],
+        { ...o, easing: 'cubic-bezier(.5,0,.2,1)', pseudoElement: '::view-transition-old(root)' });
+    }).catch(() => {});
+    vt.finished.finally(() => { busy = false; delete root.dataset.hubfx; });
+  });
 })();
 
 select(location.hash.slice(1), false);
