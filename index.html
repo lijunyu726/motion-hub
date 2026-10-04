@@ -13,6 +13,7 @@
 </script>
 <link rel="stylesheet" href="src/effects.css">
 <link rel="stylesheet" href="src/hub.css">
+<style id="accent-css"></style>
 <script src="src/core.js"></script>
 <script src="src/effects/contour.js"></script>
 <script src="src/effects/dots.js"></script>
@@ -86,7 +87,8 @@ const valsOf = e => ({ ...MH.defaults(e), ...vals[e.id] });
 function run(e) {
   if (inst) inst.destroy();
   $('stage').replaceChildren();
-  accent ? $('stage').style.setProperty('--accent', accent) : $('stage').style.removeProperty('--accent');
+  // 强调色：舞台和舞台里自带 data-theme 的元素（过渡效果的浅色 / 深色小页面）都要覆盖，否则它们会用自己主题里的强调色
+  $('accent-css').textContent = accent ? `#stage,#stage [data-theme]{--accent:${accent}}` : '';
   inst = e.mount($('stage'), { ...vals[e.id] }); inst.resume();
 }
 function select(id, push = true) {
@@ -175,7 +177,7 @@ async function fullCode(e) {
   const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read('src/effects/' + e.file)]);
   // 带上实验台里调好的参数；多行文字参数写成数组，方便阅读和修改
   const v = valsOf(e), o = Object.fromEntries((e.params || []).map(p => [p.k, p.type === 'lines' ? MH.lines(v[p.k]) : v[p.k]]));
-  const opts = JSON.stringify(o, null, 2), color = accent ? `document.documentElement.style.setProperty('--accent', '${accent}');\n` : '';
+  const opts = JSON.stringify(o, null, 2), color = accent ? `// 强调色（在 Motion Hub 上选的）；[data-theme] 也要覆盖，深浅两套主题才都用这个颜色\ndocument.head.insertAdjacentHTML('beforeend', '<style>:root,[data-theme]{--accent:${accent}}</style>');\n` : '';
   const run = color + (e.cat === '过渡'
     ? `// 舞台演示：点画面任意位置切换\nMH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), ${opts}).resume();\n// 整页深浅切换（View Transitions，过渡播完前再点不生效）：\n// MH.bindThemeToggle(button, () => {\n//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';\n// }, '${e.id.replace('theme-', '')}', { dur: ${o.dur} });`
     : `MH.effects.find(e => e.id === '${e.id}').mount(document.getElementById('fx'), ${opts}).resume();`);

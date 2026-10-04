@@ -35,7 +35,7 @@
 .tt-mock .tt-tag{font:500 2.2cqw/1 var(--sans);letter-spacing:.3em;color:var(--accent)}
 .tt-mock b{display:block;margin-top:1.4cqw;font:900 15cqw/1 var(--serif)}
 .tt-mock i{display:block;height:1.1cqw;margin-top:2.2cqw;background:var(--rule);width:80%}
-.tt-mock i.short{width:46%}
+.tt-mock i.short{width:46%;background:var(--accent)}
 .tt-scene[data-fx="dots"]{
   -webkit-mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--band)),transparent calc(var(--vr) - var(--band) + 1px)),radial-gradient(circle,#000 calc(var(--tile) * .25),transparent calc(var(--tile) * .28)),radial-gradient(circle at var(--vx) var(--vy),transparent calc(var(--vr) - var(--band) - 10px),#000 calc(var(--vr) - var(--band)),#000 var(--vr),transparent var(--vr));
   -webkit-mask-size:100% 100%,var(--tile) var(--tile),100% 100%;-webkit-mask-composite:source-over,source-in;
@@ -65,17 +65,17 @@
 .pd:active{cursor:grabbing}
 .pd-slide{position:absolute;inset:0;display:none;align-items:center;gap:6cqw;padding:0 8cqw}
 .pd-slide.on{display:flex}
-.pd-n{font:italic 400 30cqh/.8 var(--latin);color:transparent;-webkit-text-stroke:1.5px var(--ink)}
+.pd-n{font:italic 400 30cqh/.8 var(--latin);color:transparent;-webkit-text-stroke:1.5px var(--accent)}
 .pd-slide h3{font:900 9cqh/1.1 var(--serif)}
 .pd-slide p{margin-top:2cqh;font:400 3.4cqh/1.6 var(--serif);color:var(--body)}
-.pd-pn{position:absolute;right:20px;bottom:16px;font:500 12px/1 var(--mono);color:var(--dim)}
+.pd-pn{position:absolute;right:20px;bottom:16px;font:500 12px/1 var(--mono);color:var(--accent)}
 .pd-sheet{position:absolute;inset:0;pointer-events:none;z-index:5}
 .pd-band{position:absolute;left:0;width:100%;overflow:hidden;transform-origin:0 0;will-change:transform}
 .pd-band>.pd-slide{display:flex}
 
 /* @css sm-stage */
 /* 太阳月亮开关（舞台版，大号） */
-.ui-center .sm{width:22cqh;height:22cqh;border-width:2px}
+.ui-center .sm{width:22cqh;height:22cqh;border-width:2px;color:var(--accent)}
 .ui-center .sm svg{width:11cqh;height:11cqh}
 .sm-tip{font:500 12px/1 var(--mono);letter-spacing:.2em;color:var(--dim)}
 
