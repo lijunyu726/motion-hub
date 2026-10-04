@@ -8,7 +8,7 @@
 
 [在线演示 motion.lijunyu.com.cn](https://motion.lijunyu.com.cn) · [作者官网 lijunyu.com.cn](https://lijunyu.com.cn)
 
-<img src="docs/bench-day.jpg" alt="Motion Hub 实验台（浅色）" width="100%">
+<img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/bench-day.jpg" alt="Motion Hub 实验台（浅色）" width="100%">
 
 </div>
 
@@ -23,20 +23,20 @@
 - **下面**是说明和用到的技术、**参数面板**（滑块调间距 / 速度 / 半径 / 时长，片头和乱码可以输入自己的文字，还能换强调色，舞台立刻按新参数重跑），以及“复制 Prompt + 代码”按钮。
 
 
-<img src="docs/bench-night.jpg" alt="Motion Hub 实验台（深色）" width="100%">
+<img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/bench-night.jpg" alt="Motion Hub 实验台（深色）" width="100%">
 
 ## 效果一览
 
 <table>
 <tr>
-<td width="33%"><img src="docs/fx-contour.jpg" alt="等高线"><br><b>等高线</b><br><sub>Perlin 噪声地形 + Marching Squares；鼠标处隆起，点击荡开波纹</sub></td>
-<td width="33%"><img src="docs/fx-dots.jpg" alt="磁性点阵"><br><b>磁性点阵</b><br><sub>弹簧阻尼；被推开的点变大、变成强调色，点击发出冲击波</sub></td>
-<td width="33%"><img src="docs/fx-grid.jpg" alt="坐标网格"><br><b>坐标网格</b><br><sub>十字准线 + 实时坐标；经过的格子亮起角标再冷却</sub></td>
+<td width="33%"><img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/fx-contour.jpg" alt="等高线"><br><b>等高线</b><br><sub>Perlin 噪声地形 + Marching Squares；鼠标处隆起，点击荡开波纹</sub></td>
+<td width="33%"><img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/fx-dots.jpg" alt="磁性点阵"><br><b>磁性点阵</b><br><sub>弹簧阻尼；被推开的点变大、变成强调色，点击发出冲击波</sub></td>
+<td width="33%"><img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/fx-grid.jpg" alt="坐标网格"><br><b>坐标网格</b><br><sub>十字准线 + 实时坐标；经过的格子亮起角标再冷却</sub></td>
 </tr>
 <tr>
-<td><img src="docs/fx-theme-dots.jpg" alt="点阵扩散"><br><b>点阵扩散</b><br><sub>深浅切换：前沿是一圈网点，后面才是实心</sub></td>
-<td><img src="docs/fx-pull.jpg" alt="拉扯翻页"><br><b>拉扯翻页</b><br><sub>信息被扯长再拽走，背景不动；可以按住拖动</sub></td>
-<td><img src="docs/fx-intro.jpg" alt="点阵拼字片头"><br><b>点阵拼字片头</b><br><sub>点从屏幕外飞进来拼成文字，字幕依次闪过并荡开波纹</sub></td>
+<td><img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/fx-theme-dots.jpg" alt="点阵扩散"><br><b>点阵扩散</b><br><sub>深浅切换：前沿是一圈网点，后面才是实心</sub></td>
+<td><img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/fx-pull.jpg" alt="拉扯翻页"><br><b>拉扯翻页</b><br><sub>信息被扯长再拽走，背景不动；可以按住拖动</sub></td>
+<td><img src="https://raw.githubusercontent.com/lijunyu726/motion-hub/main/docs/fx-intro.jpg" alt="点阵拼字片头"><br><b>点阵拼字片头</b><br><sub>点从屏幕外飞进来拼成文字，字幕依次闪过并荡开波纹</sub></td>
 </tr>
 </table>
 

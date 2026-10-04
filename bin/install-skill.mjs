@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // 安装 Motion Hub 的 Agent Skill：把仓库里的 skill/motion-hub/ 复制到 Agent 的 skills 目录。零依赖。
-//   npx github:lijunyu726/motion-hub              装到 ~/.claude/skills/motion-hub（所有项目可用）
-//   npx github:lijunyu726/motion-hub --project    装到当前目录的 .claude/skills/motion-hub（只给这个项目）
-//   npx github:lijunyu726/motion-hub --dir <路径>  装到指定的 skills 目录下（其他 Agent 工具用）
+//   npx motion-hub              装到 ~/.claude/skills/motion-hub（所有项目可用）
+//   npx motion-hub --project    装到当前目录的 .claude/skills/motion-hub（只给这个项目）
+//   npx motion-hub --dir <路径>  装到指定的 skills 目录下（其他 Agent 工具用）
 // 已经装过会直接覆盖同名的 motion-hub 文件夹（里面只有这个 Skill 自己的文件）。
 import fs from 'node:fs';
 import os from 'node:os';
@@ -12,9 +12,9 @@ import { fileURLToPath } from 'node:url';
 const args = process.argv.slice(2);
 if (args.includes('-h') || args.includes('--help')) {
   console.log(`用法：
-  npx github:lijunyu726/motion-hub              装到 ~/.claude/skills/（所有项目可用）
-  npx github:lijunyu726/motion-hub --project    装到当前项目的 .claude/skills/
-  npx github:lijunyu726/motion-hub --dir <路径>  装到指定的 skills 目录`);
+  npx motion-hub              装到 ~/.claude/skills/（所有项目可用）
+  npx motion-hub --project    装到当前项目的 .claude/skills/
+  npx motion-hub --dir <路径>  装到指定的 skills 目录`);
   process.exit(0);
 }
 const src = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'skill', 'motion-hub');

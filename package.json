@@ -1,18 +1,48 @@
 {
   "name": "motion-hub",
   "version": "0.1.0",
-  "private": true,
-  "description": "网页动效合集：原生 JavaScript、零依赖。npx github:lijunyu726/motion-hub 安装 Agent Skill。",
+  "description": "Motion Hub 网页动效合集的 Agent Skill：一行命令装好，让 Claude 等 AI 直接挑效果、放进你的项目。原生 JavaScript、零依赖。",
+  "keywords": [
+    "agent-skill",
+    "claude",
+    "claude-code",
+    "skill",
+    "animation",
+    "web-animation",
+    "canvas",
+    "view-transitions",
+    "dark-mode",
+    "vanilla-js"
+  ],
+  "homepage": "https://motion.lijunyu.com.cn",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lijunyu726/motion-hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lijunyu726/motion-hub/issues"
+  },
+  "author": "LJY (https://lijunyu.com.cn)",
   "license": "SEE LICENSE IN LICENSE",
+  "bin": {
+    "motion-hub": "bin/install-skill.mjs"
+  },
+  "files": [
+    "bin/",
+    "skill/motion-hub/",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "smoke": "node tools/smoke.mjs",
     "sources": "node tools/build-sources.mjs",
-    "skill": "node tools/build-skill.mjs"
+    "skill": "node tools/build-skill.mjs",
+    "prepublishOnly": "npm run skill && git diff --quiet -- skill/ || (echo 'skill/ 有变化，先提交再发布' && exit 1)"
   },
   "devDependencies": {
     "puppeteer-core": "^24.0.0"
-  },
-  "bin": {
-    "motion-hub": "bin/install-skill.mjs"
   }
 }
