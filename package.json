@@ -2,7 +2,7 @@
   "name": "motion-hub",
   "version": "0.1.0",
   "private": true,
-  "description": "网页动效合集：背景、深浅切换过渡、拉扯翻页、片头与小交互。原生 JavaScript，无依赖。",
+  "description": "网页动效合集：原生 JavaScript、零依赖。npx github:lijunyu726/motion-hub 安装 Agent Skill。",
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "smoke": "node tools/smoke.mjs",
@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "puppeteer-core": "^24.0.0"
+  },
+  "bin": {
+    "motion-hub": "bin/install-skill.mjs"
   }
 }
