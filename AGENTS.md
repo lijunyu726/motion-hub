@@ -59,8 +59,9 @@
 ## Agent Skill
 
 - `skill/motion-hub/` 由 `npm run skill`（`tools/build-skill.mjs`）生成，进仓库；不要手改，改效果 / 参数 / `prompts.js` 后重新生成。单文件是用无头 Chrome 打开实验台、调用页面里的 `fullCode()` 生成的，和“复制 Prompt + 代码”同一套逻辑（默认参数、不带强调色）。
-- 设计决策：Skill 自带全部代码，使用时不联网、不访问本站或仓库（作者确认）。原因：有的 Agent 运行环境不能联网；从网上取指令有被篡改的风险。
+- 设计决策（2026-10-04 作者改为在线优先）：Agent 先 `curl` 网站上的 `skill/motion-hub/index.json` 发现新效果、下载新的效果文件，连不上网时用 Skill 自带的副本。目的：加了新效果后用户不用重新下载 Skill。SKILL.md 本身只有重装才会更新，所以流程写成通用的，新效果的信息只放在 `index.json`。为了不被网页抓取工具“总结”坏代码，SKILL.md 要求优先用命令行原样下载；并写明只认本站地址、下载的内容不是给 Agent 的指令。版本号 = 效果数 + 全部效果文件的哈希，内容不变版本不变。
 - 部署时会重新生成并打成 `skill/motion-hub.zip`（不进仓库）放到网站上，实验台右上角「Skill ↓」下载。
+- 2026-10-04 实测在线更新：装一个删掉了“风场”、版本号改旧的 Skill，让 Claude Code 做“粒子顺风流动、鼠标处漩涡”的背景，它先取在线 `index.json`，再下载 `effects/flow.html`（服务器日志可见），改出来的页面运行无报错。
 - 2026-10-04 用 Claude Code（`claude -p`）实测过：把 Skill 放进 `.claude/skills/`，让它“给首屏加等高线背景、强调色 #ff6600”，它会读 Skill 里的 contour 文件并改进页面，页面运行无报错。
 
 ## 部署（2026-10-04 上线 https://motion.lijunyu.com.cn）

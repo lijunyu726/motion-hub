@@ -1,0 +1,667 @@
+{
+  "name": "motion-hub",
+  "version": "23-201dee1b01",
+  "base": "https://motion.lijunyu.com.cn/skill/motion-hub/",
+  "preview": "https://motion.lijunyu.com.cn",
+  "count": 23,
+  "effects": [
+    {
+      "id": "contour",
+      "name": "等高线",
+      "cat": "背景",
+      "catEn": "Backgrounds",
+      "tech": "Canvas 2D · Perlin Noise · Marching Squares",
+      "desc": "地形缓慢漂移，鼠标处隆起一座小山，最高的几圈变成强调色；点击会荡开一圈圈波纹。",
+      "params": [
+        {
+          "k": "cell",
+          "label": "网格精度",
+          "type": "range",
+          "def": 14,
+          "min": 6,
+          "max": 28,
+          "unit": "px"
+        },
+        {
+          "k": "step",
+          "label": "等高距",
+          "type": "range",
+          "def": 0.12,
+          "min": 0.06,
+          "max": 0.3
+        },
+        {
+          "k": "speed",
+          "label": "漂移速度",
+          "type": "range",
+          "def": 1,
+          "min": 0,
+          "max": 5,
+          "unit": "×"
+        },
+        {
+          "k": "hill",
+          "label": "隆起高度",
+          "type": "range",
+          "def": 0.9,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "file": "effects/contour.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/contour.html",
+      "sha256": "6beee17f425bdaa93b4f9b4abd0e36342317d5778fec698ed8f0f53c70bdfdd9"
+    },
+    {
+      "id": "dots",
+      "name": "磁性点阵",
+      "cat": "背景",
+      "catEn": "Backgrounds",
+      "tech": "Canvas 2D · Spring-Damper Physics",
+      "desc": "整屏点阵被鼠标推开再弹回，推开的点变大、变成强调色；点击发出一圈冲击波。",
+      "params": [
+        {
+          "k": "gap",
+          "label": "点间距",
+          "type": "range",
+          "def": 26,
+          "min": 12,
+          "max": 60,
+          "unit": "px"
+        },
+        {
+          "k": "radius",
+          "label": "推开半径",
+          "type": "range",
+          "def": 150,
+          "min": 40,
+          "max": 320,
+          "unit": "px"
+        },
+        {
+          "k": "spring",
+          "label": "弹簧刚度",
+          "type": "range",
+          "def": 0.06,
+          "min": 0.01,
+          "max": 0.2
+        },
+        {
+          "k": "damping",
+          "label": "阻尼",
+          "type": "range",
+          "def": 0.82,
+          "min": 0.6,
+          "max": 0.95
+        }
+      ],
+      "file": "effects/dots.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/dots.html",
+      "sha256": "5c3bbfd679049b73ca45ca6f70e9e37544d18bf26a035815c94fd404952e2c6d"
+    },
+    {
+      "id": "dots-quiet",
+      "name": "安静点阵",
+      "cat": "背景",
+      "catEn": "Backgrounds",
+      "tech": "Canvas 2D · Spring-Damper Physics",
+      "desc": "同一套点阵的阅读版：点更淡、推开的范围和力度更小，没有冲击波，适合长文页面。",
+      "params": [
+        {
+          "k": "gap",
+          "label": "点间距",
+          "type": "range",
+          "def": 26,
+          "min": 12,
+          "max": 60,
+          "unit": "px"
+        },
+        {
+          "k": "radius",
+          "label": "推开半径",
+          "type": "range",
+          "def": 110,
+          "min": 40,
+          "max": 320,
+          "unit": "px"
+        },
+        {
+          "k": "spring",
+          "label": "弹簧刚度",
+          "type": "range",
+          "def": 0.06,
+          "min": 0.01,
+          "max": 0.2
+        },
+        {
+          "k": "damping",
+          "label": "阻尼",
+          "type": "range",
+          "def": 0.82,
+          "min": 0.6,
+          "max": 0.95
+        }
+      ],
+      "file": "effects/dots-quiet.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/dots-quiet.html",
+      "sha256": "d4035f55ea6509c83e3776849c5adf20a8755796f1c821e229e53b9ab389d73a"
+    },
+    {
+      "id": "flow",
+      "name": "风场",
+      "cat": "背景",
+      "catEn": "Backgrounds",
+      "tech": "Canvas 2D · Particles · Noise Flow Field",
+      "desc": "几千个粒子顺着看不见的风流动，留下淡淡的拖尾；鼠标附近被卷成漩涡，经过的粒子变成强调色。",
+      "params": [
+        {
+          "k": "density",
+          "label": "粒子密度",
+          "type": "range",
+          "def": 1,
+          "min": 0.2,
+          "max": 3,
+          "unit": "×"
+        },
+        {
+          "k": "speed",
+          "label": "流速",
+          "type": "range",
+          "def": 1.1,
+          "min": 0.2,
+          "max": 4
+        },
+        {
+          "k": "fade",
+          "label": "拖尾消退",
+          "type": "range",
+          "def": 0.07,
+          "min": 0.02,
+          "max": 0.3
+        },
+        {
+          "k": "swirl",
+          "label": "漩涡半径",
+          "type": "range",
+          "def": 180,
+          "min": 40,
+          "max": 400,
+          "unit": "px"
+        }
+      ],
+      "file": "effects/flow.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/flow.html",
+      "sha256": "6dd13e456b103b50d9c8490f7edb391b93c270b8b0e111e0e3d75e462a091124"
+    },
+    {
+      "id": "grid",
+      "name": "坐标网格",
+      "cat": "背景",
+      "catEn": "Backgrounds",
+      "tech": "Canvas 2D · Heat Decay",
+      "desc": "坐标纸背景，鼠标拖出十字准线和实时坐标；经过的格子四角亮起强调色角标，再慢慢暗下去。",
+      "params": [
+        {
+          "k": "size",
+          "label": "格子大小",
+          "type": "range",
+          "def": 40,
+          "min": 16,
+          "max": 96,
+          "unit": "px"
+        },
+        {
+          "k": "major",
+          "label": "粗线间隔",
+          "type": "range",
+          "def": 4,
+          "min": 2,
+          "max": 8,
+          "unit": "格"
+        },
+        {
+          "k": "decay",
+          "label": "余热保留",
+          "type": "range",
+          "def": 0.955,
+          "min": 0.85,
+          "max": 0.99
+        }
+      ],
+      "file": "effects/grid.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/grid.html",
+      "sha256": "898ce9fcf097445820ee60a5a48f497f5eb20ad6c22c842089588349d6c796a1"
+    },
+    {
+      "id": "theme-circle",
+      "name": "圆形揭开",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · WAAPI · clip-path",
+      "desc": "从点击处放大一个圆，盖住整页。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 650,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-circle.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-circle.html",
+      "sha256": "6fcff6e142727a372076ae1a80d815f82eec1fd7f2d044299c28f4c22cadfcae"
+    },
+    {
+      "id": "theme-ink",
+      "name": "墨水晕开",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · WAAPI · clip-path",
+      "desc": "从点击处开始，边缘是圆润的不规则形，先快后慢，像墨滴洇开。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 900,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-ink.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-ink.html",
+      "sha256": "f2bae62408b101d0d59cb8cdf3c3983090cd56fb9b070adb75adcc88f9f7ac24"
+    },
+    {
+      "id": "theme-dots",
+      "name": "点阵扩散",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · CSS Mask · @property",
+      "desc": "前沿是一圈网点，后面才是实心，适合配点阵背景。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 1000,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-dots.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-dots.html",
+      "sha256": "54d27abbde70a80f7739420241add8664c5273019adcb5198e012750faccc775"
+    },
+    {
+      "id": "theme-blinds",
+      "name": "百叶窗",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · CSS Mask · @property",
+      "desc": "一条条竖帘同时翻开，利落、有节奏。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 700,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-blinds.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-blinds.html",
+      "sha256": "a0f761e4828eb48f8877ff9ee2dc149f7abdcfa21206429d432ebee0e03a3490"
+    },
+    {
+      "id": "theme-slice",
+      "name": "斜切扫过",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · WAAPI · clip-path",
+      "desc": "一道斜边从点击的那一侧扫向另一侧。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 750,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-slice.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-slice.html",
+      "sha256": "04c83093866e8674b381c1c613a081c20a34225f884609dba351fff7dd884064"
+    },
+    {
+      "id": "theme-iris",
+      "name": "光圈快门",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · WAAPI · clip-path",
+      "desc": "六边形从点击处旋转着张开，像相机光圈。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 800,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-iris.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-iris.html",
+      "sha256": "6e5f8c92b3499dbb5e665a290ab444bb0a59858b75e91157947c10d48a938092"
+    },
+    {
+      "id": "theme-wave",
+      "name": "液面上涨",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · WAAPI · clip-path",
+      "desc": "新颜色像水一样从底部涨上来，水面起伏。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 1100,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-wave.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-wave.html",
+      "sha256": "c62a9f9f93c990682a5b585a7e309448508a2e8a2b1eecd04576825a9f90f386"
+    },
+    {
+      "id": "theme-halftone",
+      "name": "网点溶解",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · CSS Mask · @property",
+      "desc": "整屏同时长出印刷网点，越长越大，直到连成一片。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 750,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-halftone.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-halftone.html",
+      "sha256": "d541687cfde2e720f60f07d47c0f556c014c8606c7959f5477022f22ce34d997"
+    },
+    {
+      "id": "theme-soft",
+      "name": "柔光圆",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · CSS Mask · @property",
+      "desc": "和圆形揭开一样从点击处扩散，但边缘是一圈柔和的渐隐。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 800,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-soft.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-soft.html",
+      "sha256": "5107c98f9dd4ce7cbc3c335be323f751132387b0f3cdb02377c7fffe4a729af2"
+    },
+    {
+      "id": "theme-flip",
+      "name": "翻页",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · WAAPI · 3D Transform",
+      "desc": "整页像卡片一样绕竖轴翻过去，背面就是另一种颜色。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 900,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-flip.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-flip.html",
+      "sha256": "0eef9b41cb5c76dbe08cfe921de9127453047465b93fd828d417193028f5540b"
+    },
+    {
+      "id": "theme-fade",
+      "name": "淡入淡出",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · WAAPI · clip-path",
+      "desc": "最普通的渐变，作对照。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 400,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-fade.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-fade.html",
+      "sha256": "67d42bbc7454bbbe056291cfac72aa5c17039421c059a1611c77a5f669672bb8"
+    },
+    {
+      "id": "pull",
+      "name": "拉扯翻页",
+      "cat": "翻页",
+      "catEn": "Page Turn",
+      "tech": "DOM Slicing · Exponential Decay · Pointer Drag",
+      "desc": "往下翻，当前页的信息先被扯长，再整体拽走；往上翻，上一页从底部被拉上来。也可以按住拖动，拖过两成或甩得够快就翻页，否则弹回。",
+      "params": [
+        {
+          "k": "slides",
+          "label": "每页内容（一行一页：标题 | 说明）",
+          "type": "lines",
+          "def": "背景 | 等高线 · 点阵 · 风场 · 网格\n过渡 | 11 种深浅切换\n翻页 | 拉扯翻页\n交互 | 片头 · 开关 · 卡片 · 光标"
+        }
+      ],
+      "file": "effects/pull.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/pull.html",
+      "sha256": "460f56495c7fbb8429c05f4e336713594a412a488207bf978ef931e64b5487ca"
+    },
+    {
+      "id": "intro",
+      "name": "点阵拼字片头",
+      "cat": "片头",
+      "catEn": "Intro",
+      "tech": "Canvas 2D · Pure-Function Timeline · Text Sampling",
+      "desc": "网格点亮起，屏幕外的点飞进来拼成文字，字幕依次闪过并荡开波纹；播完定格。点一下重播。",
+      "params": [
+        {
+          "k": "text",
+          "label": "拼出的文字",
+          "type": "text",
+          "def": "LJY"
+        },
+        {
+          "k": "captions",
+          "label": "字幕（一行一条）",
+          "type": "lines",
+          "def": "背景\n过渡\n翻页\n交互"
+        },
+        {
+          "k": "gap",
+          "label": "点间距",
+          "type": "range",
+          "def": 22,
+          "min": 10,
+          "max": 40,
+          "unit": "px"
+        }
+      ],
+      "file": "effects/intro.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/intro.html",
+      "sha256": "1b631193d00988c84e33cafb8cb7c3d515189e05408c5013a81a93ab34242f41"
+    },
+    {
+      "id": "sun-moon",
+      "name": "太阳月亮开关",
+      "cat": "交互",
+      "catEn": "Interactions",
+      "tech": "SVG Mask · CSS Transform",
+      "desc": "深浅模式开关的图标：浅色时是月亮（点了变深色），深色时是太阳；切换时光芒收起、圆被咬掉一口变成月牙。",
+      "params": [
+        {
+          "k": "interval",
+          "label": "自动演示间隔",
+          "type": "range",
+          "def": 1800,
+          "min": 600,
+          "max": 5000,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/sun-moon.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/sun-moon.html",
+      "sha256": "97a026dd952a9dbd86f94e0e80458ea2f161ea9cb2f9a86dc4c54ea7b485fdbf"
+    },
+    {
+      "id": "glow-card",
+      "name": "边框高光卡片",
+      "cat": "交互",
+      "catEn": "Interactions",
+      "tech": "CSS Mask · mask-composite · 3D Tilt",
+      "desc": "指针在卡片上移动时，边框沿着指针亮起一段光，卡片同时朝指针方向轻轻倾斜。",
+      "params": [
+        {
+          "k": "tilt",
+          "label": "倾斜角度",
+          "type": "range",
+          "def": 10,
+          "min": 0,
+          "max": 25,
+          "unit": "°"
+        }
+      ],
+      "file": "effects/glow-card.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/glow-card.html",
+      "sha256": "5bc7fa47c89fa721ff10c210cdd13c0d1de9a8973a6fc0d9f5e1c4ce5cd9529f"
+    },
+    {
+      "id": "scramble",
+      "name": "乱码落定",
+      "cat": "交互",
+      "catEn": "Interactions",
+      "tech": "requestAnimationFrame · Text Scramble",
+      "desc": "指针经过时，文字先变成乱码，再从左到右一个个落回原字，适合导航和标题。",
+      "params": [
+        {
+          "k": "words",
+          "label": "文字（一行一条）",
+          "type": "lines",
+          "def": "MOTION HUB\n背景 · 过渡 · 翻页\nHELLO, LJY"
+        },
+        {
+          "k": "pool",
+          "label": "乱码字符",
+          "type": "text",
+          "def": "01#/<>+=*[]{}%$&"
+        },
+        {
+          "k": "step",
+          "label": "每字落定间隔",
+          "type": "range",
+          "def": 55,
+          "min": 15,
+          "max": 160,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/scramble.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/scramble.html",
+      "sha256": "a97d8739c02d03aba14f08a042c5567891ae7a17c80ef179e07ba3f83ac2cb2c"
+    },
+    {
+      "id": "follow-tip",
+      "name": "跟随信息卡",
+      "cat": "交互",
+      "catEn": "Interactions",
+      "tech": "Lerp · Pointer Tracking",
+      "desc": "悬停在某一行时，信息卡带着一点“拖拽感”跟随指针，靠近边缘会自动翻到另一侧。",
+      "params": [
+        {
+          "k": "lag",
+          "label": "跟随灵敏度",
+          "type": "range",
+          "def": 0.18,
+          "min": 0.04,
+          "max": 1
+        },
+        {
+          "k": "offset",
+          "label": "离指针距离",
+          "type": "range",
+          "def": 18,
+          "min": 0,
+          "max": 60,
+          "unit": "px"
+        }
+      ],
+      "file": "effects/follow-tip.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/follow-tip.html",
+      "sha256": "587bc7356f81100bbcc53a3ae09fc9095188d10a3e7886065f224bf5e46018f4"
+    },
+    {
+      "id": "pipeline",
+      "name": "校验链",
+      "cat": "交互",
+      "catEn": "Interactions",
+      "tech": "SVG · Staged Easing",
+      "desc": "一次操作依次经过多道检查：小点在每道关前减速、通过后点亮，适合解释流程或状态机。",
+      "params": [
+        {
+          "k": "gates",
+          "label": "关卡（一行一个）",
+          "type": "lines",
+          "def": "计划\n身份\n权限\n状态\n幂等\n限流\n审计"
+        },
+        {
+          "k": "period",
+          "label": "一轮时长",
+          "type": "range",
+          "def": 7000,
+          "min": 2000,
+          "max": 15000,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/pipeline.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/pipeline.html",
+      "sha256": "7aadf855759f4742ed6e7ef0bc4ee8ab2029b36d489371f56508e095198de5f5"
+    }
+  ]
+}

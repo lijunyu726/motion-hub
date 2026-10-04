@@ -125,7 +125,7 @@ node tools/smoke.mjs --night --mobile
 - **Claude Code**：解压到 `~/.claude/skills/`（所有项目可用）或项目里的 `.claude/skills/`（只给这个项目）。
 - **其他支持 Agent Skills 的工具**：按各自的说明安装这个文件夹。
 
-Skill 自带全部代码，使用时不需要联网，也不会访问本站或仓库；效果有更新时重新下载即可。源码改动后用 `npm run skill` 重新生成（部署脚本会自动生成并打包）。
+**装一次就行**：Agent 每次使用时会先从 https://motion.lijunyu.com.cn/skill/motion-hub/index.json 取最新的效果目录，新加的效果直接在线下载，不用重新安装 Skill；连不上网时用 Skill 自带的副本。源码改动后用 `npm run skill` 重新生成（部署脚本会自动生成并打包）。
 
 ## 参与
 
