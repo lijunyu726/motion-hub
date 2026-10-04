@@ -86,7 +86,7 @@
             a2.finished.then(settle, quiet);
           }, quiet);
         } else {
-          const a = top.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE }); anims.push(a);
+          const a = top.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE, fill: 'forwards' }); anims.push(a);
           a.finished.then(settle, quiet);
         }
       };
@@ -129,7 +129,8 @@
         root.animate([{ transform: 'perspective(1800px) rotateY(0)' }, { transform: 'perspective(1800px) rotateY(90deg)' }], { ...o, pseudoElement: '::view-transition-old(root)' });
         root.animate([{ transform: 'perspective(1800px) rotateY(-90deg)' }, { transform: 'perspective(1800px) rotateY(0)' }], { ...o, delay: fx.dur / 2, pseudoElement: '::view-transition-new(root)' });
       } else if (fx.shape && id !== 'fade') {
-        root.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE, pseudoElement: '::view-transition-new(root)' });
+        // fill: 'forwards'：停在最后一帧，否则过渡层撤掉前会有一帧遮罩归零，整屏闪回旧颜色
+        root.animate(fx.shape(x, y, R, W, H, s), { duration: fx.dur, easing: EASE, fill: 'forwards', pseudoElement: '::view-transition-new(root)' });
       }
     }).catch(() => {});
     vt.finished.finally(() => { if (active === vt) { active = null; delete root.dataset.vfx; } });
