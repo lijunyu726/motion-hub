@@ -1,0 +1,279 @@
+<!doctype html>
+<!--
+  「等高线」 · Motion Hub · MIT + Commons Clause（可免费用于任何项目，不能售卖效果本身）
+
+  【怎么用】
+  这个文件可以直接双击打开，先看效果。
+  想放进自己的项目：把整个文件交给 AI（Claude / ChatGPT / Cursor 等），再说一句你的技术栈和想要的调整，
+  例如“把这个效果改写成 React 组件，放在首屏当背景，颜色换成我的品牌色”。下面的说明就是写给它看的。
+
+  【效果】
+  背景是一片缓慢漂移的地形等高线。鼠标所在处隆起一座小山，最高的几圈线变成强调色；点击会从点击处荡开一圈圈波纹。
+
+  【实现原理】
+  - 用两层 Perlin 噪声叠加成高度场，随时间平移，让地形缓慢漂移。
+  - 在网格上用 marching squares 按固定高度间隔描等值线（16 种格子情况，线段端点按高度线性插值），每 5 条加深一条。
+  - 鼠标处叠加一个高斯“山包”，位置和强度都平滑跟随；高于阈值的等值线用强调色画。
+  - 点击记录一个波源：高度场叠加一圈向外传播、随距离和时间衰减的余弦波。
+
+  【可以调的参数】
+  - 网格边长 CELL（越小越细、越耗性能，默认 14px）
+  - 等值线间隔 0.12
+  - 噪声缩放 1/420
+  - 漂移速度 0.02
+  - 山包半径 √33800 ≈ 184px
+  - 波纹速度 420px/s，寿命 2.6s
+
+  【注意】
+  - 每帧重算整片网格，1440×900 约 100×65 格。更大的屏幕可以增大 CELL 或降低帧率。
+  - 所有线段按高度分组，每组一次 beginPath / stroke，不要逐段 stroke。
+  - 颜色都来自 CSS 变量（paper / ink / dim / rule / accent），换成项目自己的颜色即可。
+  - 要处理 prefers-reduced-motion：系统要求减少动态效果时只显示静止画面。
+  - 组件卸载时要停掉动画循环、移除事件监听（mount 返回的 destroy）。
+
+  【opts 参数】（mount 的第二个参数，不传就用默认值；文件末尾的 mount 调用里是你在 Motion Hub 上调好的值）
+  - cell：网格精度，默认 14（6–28px）
+  - step：等高距，默认 0.12（0.06–0.3）
+  - speed：漂移速度，默认 1（0–5×）
+  - hill：隆起高度，默认 0.9（0–2）
+
+  【代码结构】
+  - <style>：配色变量和这个效果用到的样式
+  - 第一段 <script>：MH 核心（注册表、噪声、缓动；canvasHost 负责画布尺寸、指针坐标、动画循环和暂停）
+  - 第二段 <script>：效果本身，核心是 MH.register 里的 mount(el, opts)，返回 { pause, resume, destroy }
+  - 最后一段 <script>：把效果挂到 #fx 上并启动
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>等高线</title>
+<style>
+/* Motion Hub 效果样式：配色变量（Acid：浅色暖灰 + 紫罗兰，深色近黑 + 酸橙绿）+ 各效果用到的样式 + 整页过渡遮罩。按“@css 名称”标记分段，复制代码时只带用到的段。 */
+:root{
+  --paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E;
+  --serif:"Songti SC","STSong","Noto Serif SC",serif;
+  --sans:"PingFang SC","Helvetica Neue","Noto Sans SC",sans-serif;
+  --latin:"Iowan Old Style",Palatino,Georgia,serif;
+  --mono:"SF Mono",Menlo,monospace;
+}
+[data-theme="night"]{--paper:#111113;--paper2:#1B1B1F;--ink:#F2F1F5;--body:#C4C2CC;--dim:#7E7B88;--rule:#2A2A30;--accent:#C6F21E;--on-accent:#111113;--hi:#8E75FF}
+[data-theme="day"]{--paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E}
+
+/* ───── 效果共用 ───── */
+.mh-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+html,body{height:100%;margin:0;background:var(--paper)}
+#fx{position:relative;height:100vh;overflow:hidden;container-type:size}
+</style>
+</head>
+<body>
+<div id="fx"></div>
+<script>
+// Motion Hub 核心：注册表 + 公共工具。所有效果文件都是普通 <script>（不是 ES 模块），
+// 这样直接双击 index.html（file://）也能运行。每个效果调用 MH.register({...}) 把自己登记进来。
+//
+// 效果对象的约定：
+//   id      唯一标识（小写短横线）
+//   name    中文名
+//   cat     分类：背景 / 过渡 / 翻页 / 片头 / 交互
+//   tech    用到的技术（展示用）
+//   desc    一句话说明
+//   mount(el, opts) → { pause(), resume(), destroy() }
+//     el 是一个已经有尺寸的容器；opts.expanded 为 true 表示全屏体验（关掉幽灵光标、允许滚轮等）
+//   params  可调参数（可选），实验台据此生成参数面板，每项 { k, label, type, def, ... }：
+//     type 'range'：数值滑块，带 min / max / step，可选 unit；'text'：单行文字；'lines'：多行文字，一行一项
+//     mount 拿到的 opts 已经按 def 补齐（register 里包了一层），效果代码直接读 opts.k 即可
+window.MH = (() => {
+  const effects = [];
+  // 记下效果来自哪个文件（复制代码时只带这个文件）
+  const register = e => {
+    const src = document.currentScript && document.currentScript.src; e.file = e.file || (src ? src.split('/').pop() : '');
+    if (e.params) { const m = e.mount; e.mount = (el, opts = {}) => m.call(e, el, { ...defaults(e), ...opts }); }
+    effects.push(e);
+  };
+  const defaults = e => Object.fromEntries((e.params || []).map(p => [p.k, p.def]));
+  // 'lines' 参数：数组原样返回；字符串按行拆开，去掉空行
+  const lines = v => Array.isArray(v) ? v : String(v || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const ease = {
+    in: t => t * t * t,
+    out: t => 1 - (1 - t) ** 3,
+    inOut: t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2,
+    back: t => { const c = 1.4; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; },
+  };
+  const hash = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+  // 二维 Perlin 噪声，seed 决定排列表
+  function perlin(seed = 1) {
+    const P = new Uint8Array(512), p = [...Array(256).keys()];
+    let s = seed;
+    for (let i = 255; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) P[i] = p[i & 255];
+    const fade = t => t * t * t * (t * (t * 6 - 15) + 10), grad = (h, x, y) => ((h & 1) ? -x : x) + ((h & 2) ? -y : y);
+    return (x, y) => {
+      const X = Math.floor(x) & 255, Y = Math.floor(y) & 255; x -= Math.floor(x); y -= Math.floor(y);
+      const u = fade(x), v = fade(y), a = P[X] + Y, b = P[X + 1] + Y;
+      const l1 = grad(P[a], x, y) + u * (grad(P[b], x - 1, y) - grad(P[a], x, y));
+      const l2 = grad(P[a + 1], x, y - 1) + u * (grad(P[b + 1], x - 1, y - 1) - grad(P[a + 1], x, y - 1));
+      return l1 + v * (l2 - l1);
+    };
+  }
+
+  // 画布按设备像素比放大，画的时候仍用 CSS 像素坐标
+  function fit(cv, w, h) {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return ctx;
+  }
+  // 从容器读主题色（--paper / --ink / --dim / --rule / --accent）
+  function colors(el) {
+    const cs = getComputedStyle(el), v = n => cs.getPropertyValue(n).trim();
+    const t = el.closest('[data-theme]');
+    return { paper: v('--paper'), ink: v('--ink'), dim: v('--dim'), rule: v('--rule'), accent: v('--accent'), night: !!t && t.dataset.theme === 'night' };
+  }
+  // 一段时长 ms 的补间，fn(k) 中 k 从 0 到 1；减少动态效果时直接到终点
+  const tween = (ms, fn) => new Promise(res => {
+    if (still()) { fn(1); return res(); }
+    const t0 = performance.now();
+    const f = now => { const k = clamp((now - t0) / ms); fn(k); k < 1 ? requestAnimationFrame(f) : res(); };
+    requestAnimationFrame(f);
+  });
+  // 尺寸缩放系数：全屏约 1，缩略图约 0.45，让小画面像“整页缩小”而不是挤满细节
+  const scaleOf = W => clamp(W / 1200, .45, 1);
+
+  // 幽灵光标：没人操作时，沿一条利萨如曲线在容器里慢慢移动，让缩略图自己演示交互
+  const ghostAt = (now, W, H, seed = 0) => {
+    const t = now / 1000 + seed * 7;
+    return { x: W * (.5 + .32 * Math.sin(t * .55) * Math.cos(t * .21)), y: H * (.5 + .3 * Math.sin(t * .83 + 1.3)) };
+  };
+
+  // 效果宿主：（可选）建画布、跟随尺寸、换算局部指针坐标、管动画循环和暂停。
+  // setup(h) 返回 { resize(W,H), frame(now), down(x,y), theme(), ghostClick }，h 提供 ctx / W / H / P / s / colors()
+  // ghostClick: false 表示幽灵光标不替它“点击”（例如片头，点一下会重播）
+  function canvasHost(el, opts, setup, { canvas = true } = {}) {
+    const cv = canvas ? document.createElement('canvas') : null;
+    if (cv) { cv.className = 'mh-canvas'; el.append(cv); }
+    let ctx, W = 0, H = 0, raf = 0, running = false, lastReal = -1e9, lastGhostClick = 0;
+    const P = { x: -9999, y: -9999, real: false };
+    const seed = hash(effects.length + el.childElementCount);
+    const h = { cv, get ctx() { return ctx; }, get W() { return W; }, get H() { return H; }, P, s: 1, colors: () => colors(el), expanded: !!opts.expanded };
+    const api = setup(h);
+    const size = () => {
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) return;
+      W = r.width; H = r.height; h.s = scaleOf(W); if (cv) ctx = fit(cv, W, H); api.resize && api.resize(W, H);
+      if (!running) api.frame(performance.now());
+    };
+    const ro = new ResizeObserver(size); ro.observe(el);
+    const local = e => { const r = el.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const onMove = e => { [P.x, P.y] = local(e); P.real = true; lastReal = performance.now(); };
+    const onLeave = () => { P.real = false; P.x = P.y = -9999; };
+    const onDown = e => { if (e.target.closest('a, button')) return; lastReal = performance.now(); const [x, y] = local(e); api.down && api.down(x, y); };
+    el.addEventListener('pointermove', onMove); el.addEventListener('pointerleave', onLeave); el.addEventListener('pointerdown', onDown);
+    const mo = new MutationObserver(() => { api.theme && api.theme(); if (!running) api.frame(performance.now()); });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
+    const tick = now => {
+      if (!running) return;
+      // 缩略图里 2.5 秒没人碰，就让幽灵光标接管；偶尔“点”一下展示点击效果
+      if (!h.expanded && now - lastReal > 2500) {
+        const g = ghostAt(now, W, H, seed); P.x = g.x; P.y = g.y;
+        if (api.down && api.ghostClick !== false && now - lastGhostClick > 4200) { lastGhostClick = now; api.down(g.x, g.y); }
+      }
+      if (W && H) api.frame(now);
+      raf = requestAnimationFrame(tick);
+    };
+    size();
+    return {
+      pause() { running = false; cancelAnimationFrame(raf); },
+      resume() { if (running) return; if (still()) { api.frame(performance.now()); return; } running = true; raf = requestAnimationFrame(tick); },
+      destroy() { this.pause(); ro.disconnect(); mo.disconnect(); el.removeEventListener('pointermove', onMove); el.removeEventListener('pointerleave', onLeave); el.removeEventListener('pointerdown', onDown); cv && cv.remove(); },
+    };
+  }
+
+  // 让 CSS 能对自定义属性做补间（遮罩半径等）
+  if (window.CSS && CSS.registerProperty) {
+    for (const name of ['--vr', '--vw']) { try { CSS.registerProperty({ name, syntax: '<length>', inherits: false, initialValue: '0px' }); } catch (e) { /* 已注册 */ } }
+  }
+
+  return { effects, register, defaults, lines, still, clamp, lerp, ease, hash, perlin, fit, colors, tween, scaleOf, ghostAt, canvasHost };
+})();
+</script>
+<script>
+// 背景动效：画在 canvas 上，尺寸跟随容器，h.s 是缩放系数（全屏约 1，缩略图约 0.45）。
+
+// ───── 等高线：平滑噪声当地形，每隔一个高度描一圈线（marching squares）；鼠标处隆起，点击泛起波纹 ─────
+MH.register({
+  id: 'contour', name: '等高线', cat: '背景', tech: 'Canvas 2D · Perlin Noise · Marching Squares',
+  desc: '地形缓慢漂移，鼠标处隆起一座小山，最高的几圈变成强调色；点击会荡开一圈圈波纹。',
+  params: [
+    { k: 'cell', label: '网格精度', type: 'range', min: 6, max: 28, step: 1, def: 14, unit: 'px' },
+    { k: 'step', label: '等高距', type: 'range', min: 0.06, max: 0.3, step: 0.01, def: 0.12 },
+    { k: 'speed', label: '漂移速度', type: 'range', min: 0, max: 5, step: 0.1, def: 1, unit: '×' },
+    { k: 'hill', label: '隆起高度', type: 'range', min: 0, max: 2, step: 0.05, def: 0.9 },
+  ],
+  mount: (el, opts) => MH.canvasHost(el, opts, h => {
+    const noise = MH.perlin(3), LEVELS = [], m = { x: -999, y: -999, a: 0 }, waves = [];
+    for (let l = -1.2; l <= 1.65; l += opts.step) LEVELS.push(l);
+    let C = h.colors(), CELL, cols, rows, field;
+    return {
+      resize(W, H) { CELL = Math.max(4, opts.cell * h.s); cols = Math.ceil(W / CELL) + 1; rows = Math.ceil(H / CELL) + 1; field = new Float32Array(cols * rows); },
+      theme() { C = h.colors(); },
+      down(x, y) { waves.push({ x, y, t0: performance.now() }); if (waves.length > 4) waves.shift(); },
+      frame(now) {
+        const { ctx, W, H, P, s } = h, t = now / 1000 * .02 * opts.speed, SC = 1 / (420 * s);
+        const on = P.x > -999;
+        if (on && m.x < -900) { m.x = P.x; m.y = P.y; }
+        m.x += ((on ? P.x : m.x) - m.x) * .12; m.y += ((on ? P.y : m.y) - m.y) * .12; m.a += ((on ? 1 : 0) - m.a) * .06;
+        const R2 = 33800 * s * s, live = waves.filter(w => now - w.t0 < 2600);
+        for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+          const px = i * CELL, py = j * CELL, wx = px * SC, wy = py * SC;
+          let v = noise(wx + t, wy) * 1.1 + noise(wx * 2.1 - t * .7, wy * 2.1 + 9) * .45;
+          if (m.a > .01) { const dx = px - m.x, dy = py - m.y; v += opts.hill * m.a * Math.exp(-(dx * dx + dy * dy) / R2); }
+          for (const w of live) {
+            const age = (now - w.t0) / 1000, d = Math.hypot(px - w.x, py - w.y), front = age * 420 * s;
+            if (Math.abs(d - front) < 160 * s) v += .35 * Math.cos((d - front) / (26 * s)) * Math.exp(-(((d - front) / (90 * s)) ** 2)) * (1 - age / 2.6);
+          }
+          field[j * cols + i] = v;
+        }
+        ctx.clearRect(0, 0, W, H); ctx.lineWidth = 1;
+        for (let li = 0; li < LEVELS.length; li++) {
+          const L = LEVELS[li], hot = L >= 1;
+          ctx.strokeStyle = hot ? C.accent : C.dim;
+          ctx.globalAlpha = hot ? .6 : (li % 5 === 0 ? (C.night ? .32 : .42) : (C.night ? .16 : .22));
+          ctx.beginPath();
+          for (let j = 0; j < rows - 1; j++) for (let i = 0; i < cols - 1; i++) {
+            const a = field[j * cols + i], b = field[j * cols + i + 1], c = field[(j + 1) * cols + i + 1], d = field[(j + 1) * cols + i];
+            const k = (a > L) | ((b > L) << 1) | ((c > L) << 2) | ((d > L) << 3);
+            if (k === 0 || k === 15) continue;
+            const x0 = i * CELL, y0 = j * CELL, R = x0 + CELL, B = y0 + CELL;
+            const Tx = x0 + (L - a) / (b - a) * CELL, Ry = y0 + (L - b) / (c - b) * CELL, Bx = x0 + (L - d) / (c - d) * CELL, Ly = y0 + (L - a) / (d - a) * CELL;
+            switch (k) {
+              case 1: case 14: ctx.moveTo(x0, Ly); ctx.lineTo(Tx, y0); break;
+              case 2: case 13: ctx.moveTo(Tx, y0); ctx.lineTo(R, Ry); break;
+              case 3: case 12: ctx.moveTo(x0, Ly); ctx.lineTo(R, Ry); break;
+              case 4: case 11: ctx.moveTo(R, Ry); ctx.lineTo(Bx, B); break;
+              case 6: case 9: ctx.moveTo(Tx, y0); ctx.lineTo(Bx, B); break;
+              case 7: case 8: ctx.moveTo(x0, Ly); ctx.lineTo(Bx, B); break;
+              case 5: ctx.moveTo(x0, Ly); ctx.lineTo(Tx, y0); ctx.moveTo(R, Ry); ctx.lineTo(Bx, B); break;
+              case 10: ctx.moveTo(Tx, y0); ctx.lineTo(R, Ry); ctx.moveTo(x0, Ly); ctx.lineTo(Bx, B); break;
+            }
+          }
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      },
+    };
+  }),
+});
+</script>
+<script>
+MH.effects.find(e => e.id === 'contour').mount(document.getElementById('fx'), {
+  "cell": 14,
+  "step": 0.12,
+  "speed": 1,
+  "hill": 0.9
+}).resume();
+</script>
+</body>
+</html>

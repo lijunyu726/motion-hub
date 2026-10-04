@@ -6,7 +6,8 @@
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "smoke": "node tools/smoke.mjs",
-    "sources": "node tools/build-sources.mjs"
+    "sources": "node tools/build-sources.mjs",
+    "skill": "node tools/build-skill.mjs"
   },
   "devDependencies": {
     "puppeteer-core": "^24.0.0"

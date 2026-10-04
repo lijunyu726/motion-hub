@@ -56,6 +56,13 @@
 - 页脚的 ICP 备案号是部署到个人子域名的合规要求，不要删除。
 - 许可证 MIT + Commons Clause（参照 React Bits）：任何项目都能用，但不能售卖效果本身。仓库目前私有，准备做完后整个公开；不要擅自改可见性，公开由作者决定。
 
+## Agent Skill
+
+- `skill/motion-hub/` 由 `npm run skill`（`tools/build-skill.mjs`）生成，进仓库；不要手改，改效果 / 参数 / `prompts.js` 后重新生成。单文件是用无头 Chrome 打开实验台、调用页面里的 `fullCode()` 生成的，和“复制 Prompt + 代码”同一套逻辑（默认参数、不带强调色）。
+- 设计决策：Skill 自带全部代码，使用时不联网、不访问本站或仓库（作者确认）。原因：有的 Agent 运行环境不能联网；从网上取指令有被篡改的风险；仓库私有时 Agent 本来也访问不到。
+- 部署时会重新生成并打成 `skill/motion-hub.zip`（不进仓库）放到网站上，实验台右上角「Skill ↓」下载。
+- 2026-10-04 用 Claude Code（`claude -p`）实测过：把 Skill 放进 `.claude/skills/`，让它“给首屏加等高线背景、强调色 #ff6600”，它会读 Skill 里的 contour 文件并改进页面，页面运行无报错。
+
 ## 部署（2026-10-04 上线 https://motion.lijunyu.com.cn）
 
 - `bash deploy/deploy.sh`：先检查 `src/sources.js` 没过期，再用 rsync 只同步 `index.html`、`favicon.svg`、`robots.txt`、`LICENSE`、`src/` 到服务器 `/www/wwwroot/motion.lijunyu.com.cn/`（ssh 别名 `tc`）。其他文件（文档、tools、docs、node_modules、scratch）都不传；新加了网页要用的顶层文件，要同时加进脚本的 `--include`。

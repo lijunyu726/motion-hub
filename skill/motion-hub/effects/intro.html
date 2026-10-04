@@ -1,0 +1,302 @@
+<!doctype html>
+<!--
+  「点阵拼字片头」 · Motion Hub · MIT + Commons Clause（可免费用于任何项目，不能售卖效果本身）
+
+  【怎么用】
+  这个文件可以直接双击打开，先看效果。
+  想放进自己的项目：把整个文件交给 AI（Claude / ChatGPT / Cursor 等），再说一句你的技术栈和想要的调整，
+  例如“把这个效果改写成 React 组件，放在首屏当背景，颜色换成我的品牌色”。下面的说明就是写给它看的。
+
+  【效果】
+  片头：网格点从中心一圈圈亮起，屏幕外的点沿弧线飞进来，在网格缝隙里拼出文字；字幕依次闪过，每出现一个就从文字中心荡开一圈波纹；最后定格，可以直接当首屏背景。点击重播。
+
+  【实现原理】
+  - 整个画面是时间的纯函数 frame(t)：同一个 t 永远画出同一帧，所以能随时跳到结尾、重播，或按任意尺寸重画最后一帧。
+  - 把文字画到离屏 canvas 上（fillText 再加 strokeText 加粗细笔画），用 getImageData 当遮罩采样。
+  - 落在字形里的网格点后来变成强调色；字形里的网格缝隙（错开半格）作为飞入点的目标。
+  - 飞入点从屏幕外随机角度出发，沿二次贝塞尔弧线飞到目标，延迟按哈希错开。
+  - 波纹是几圈按时间外扩的高斯环，把经过的点往外推一下并放大。
+
+  【可以调的参数】
+  - 总时长 6.8s，定格 2.6s 后循环
+  - 网格间距 22px
+  - 字号 min(H × 0.42, W × 0.3)
+  - 字幕时间 3.4s 起每 0.65s 一个
+
+  【注意】
+  - 衬线字的细笔画只有一两个点宽，必须描边加粗，点阵字才压得住。
+  - 想在首页用：播完后把最后一帧留作背景，再把同一批点交给鼠标交互（推开、回弹）。
+  - 颜色都来自 CSS 变量（paper / ink / dim / rule / accent），换成项目自己的颜色即可。
+  - 要处理 prefers-reduced-motion：系统要求减少动态效果时只显示静止画面。
+  - 组件卸载时要停掉动画循环、移除事件监听（mount 返回的 destroy）。
+
+  【opts 参数】（mount 的第二个参数，不传就用默认值；文件末尾的 mount 调用里是你在 Motion Hub 上调好的值）
+  - text：拼出的文字，默认 "LJY"
+  - captions：字幕（一行一条），默认 "背景\n过渡\n翻页\n交互"
+  - gap：点间距，默认 22（10–40px）
+
+  【代码结构】
+  - <style>：配色变量和这个效果用到的样式
+  - 第一段 <script>：MH 核心（注册表、噪声、缓动；canvasHost 负责画布尺寸、指针坐标、动画循环和暂停）
+  - 第二段 <script>：效果本身，核心是 MH.register 里的 mount(el, opts)，返回 { pause, resume, destroy }
+  - 最后一段 <script>：把效果挂到 #fx 上并启动
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>点阵拼字片头</title>
+<style>
+/* Motion Hub 效果样式：配色变量（Acid：浅色暖灰 + 紫罗兰，深色近黑 + 酸橙绿）+ 各效果用到的样式 + 整页过渡遮罩。按“@css 名称”标记分段，复制代码时只带用到的段。 */
+:root{
+  --paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E;
+  --serif:"Songti SC","STSong","Noto Serif SC",serif;
+  --sans:"PingFang SC","Helvetica Neue","Noto Sans SC",sans-serif;
+  --latin:"Iowan Old Style",Palatino,Georgia,serif;
+  --mono:"SF Mono",Menlo,monospace;
+}
+[data-theme="night"]{--paper:#111113;--paper2:#1B1B1F;--ink:#F2F1F5;--body:#C4C2CC;--dim:#7E7B88;--rule:#2A2A30;--accent:#C6F21E;--on-accent:#111113;--hi:#8E75FF}
+[data-theme="day"]{--paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E}
+
+/* ───── 效果共用 ───── */
+.mh-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+html,body{height:100%;margin:0;background:var(--paper)}
+#fx{position:relative;height:100vh;overflow:hidden;container-type:size}
+</style>
+</head>
+<body>
+<div id="fx"></div>
+<script>
+// Motion Hub 核心：注册表 + 公共工具。所有效果文件都是普通 <script>（不是 ES 模块），
+// 这样直接双击 index.html（file://）也能运行。每个效果调用 MH.register({...}) 把自己登记进来。
+//
+// 效果对象的约定：
+//   id      唯一标识（小写短横线）
+//   name    中文名
+//   cat     分类：背景 / 过渡 / 翻页 / 片头 / 交互
+//   tech    用到的技术（展示用）
+//   desc    一句话说明
+//   mount(el, opts) → { pause(), resume(), destroy() }
+//     el 是一个已经有尺寸的容器；opts.expanded 为 true 表示全屏体验（关掉幽灵光标、允许滚轮等）
+//   params  可调参数（可选），实验台据此生成参数面板，每项 { k, label, type, def, ... }：
+//     type 'range'：数值滑块，带 min / max / step，可选 unit；'text'：单行文字；'lines'：多行文字，一行一项
+//     mount 拿到的 opts 已经按 def 补齐（register 里包了一层），效果代码直接读 opts.k 即可
+window.MH = (() => {
+  const effects = [];
+  // 记下效果来自哪个文件（复制代码时只带这个文件）
+  const register = e => {
+    const src = document.currentScript && document.currentScript.src; e.file = e.file || (src ? src.split('/').pop() : '');
+    if (e.params) { const m = e.mount; e.mount = (el, opts = {}) => m.call(e, el, { ...defaults(e), ...opts }); }
+    effects.push(e);
+  };
+  const defaults = e => Object.fromEntries((e.params || []).map(p => [p.k, p.def]));
+  // 'lines' 参数：数组原样返回；字符串按行拆开，去掉空行
+  const lines = v => Array.isArray(v) ? v : String(v || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const ease = {
+    in: t => t * t * t,
+    out: t => 1 - (1 - t) ** 3,
+    inOut: t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2,
+    back: t => { const c = 1.4; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; },
+  };
+  const hash = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+  // 二维 Perlin 噪声，seed 决定排列表
+  function perlin(seed = 1) {
+    const P = new Uint8Array(512), p = [...Array(256).keys()];
+    let s = seed;
+    for (let i = 255; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) P[i] = p[i & 255];
+    const fade = t => t * t * t * (t * (t * 6 - 15) + 10), grad = (h, x, y) => ((h & 1) ? -x : x) + ((h & 2) ? -y : y);
+    return (x, y) => {
+      const X = Math.floor(x) & 255, Y = Math.floor(y) & 255; x -= Math.floor(x); y -= Math.floor(y);
+      const u = fade(x), v = fade(y), a = P[X] + Y, b = P[X + 1] + Y;
+      const l1 = grad(P[a], x, y) + u * (grad(P[b], x - 1, y) - grad(P[a], x, y));
+      const l2 = grad(P[a + 1], x, y - 1) + u * (grad(P[b + 1], x - 1, y - 1) - grad(P[a + 1], x, y - 1));
+      return l1 + v * (l2 - l1);
+    };
+  }
+
+  // 画布按设备像素比放大，画的时候仍用 CSS 像素坐标
+  function fit(cv, w, h) {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return ctx;
+  }
+  // 从容器读主题色（--paper / --ink / --dim / --rule / --accent）
+  function colors(el) {
+    const cs = getComputedStyle(el), v = n => cs.getPropertyValue(n).trim();
+    const t = el.closest('[data-theme]');
+    return { paper: v('--paper'), ink: v('--ink'), dim: v('--dim'), rule: v('--rule'), accent: v('--accent'), night: !!t && t.dataset.theme === 'night' };
+  }
+  // 一段时长 ms 的补间，fn(k) 中 k 从 0 到 1；减少动态效果时直接到终点
+  const tween = (ms, fn) => new Promise(res => {
+    if (still()) { fn(1); return res(); }
+    const t0 = performance.now();
+    const f = now => { const k = clamp((now - t0) / ms); fn(k); k < 1 ? requestAnimationFrame(f) : res(); };
+    requestAnimationFrame(f);
+  });
+  // 尺寸缩放系数：全屏约 1，缩略图约 0.45，让小画面像“整页缩小”而不是挤满细节
+  const scaleOf = W => clamp(W / 1200, .45, 1);
+
+  // 幽灵光标：没人操作时，沿一条利萨如曲线在容器里慢慢移动，让缩略图自己演示交互
+  const ghostAt = (now, W, H, seed = 0) => {
+    const t = now / 1000 + seed * 7;
+    return { x: W * (.5 + .32 * Math.sin(t * .55) * Math.cos(t * .21)), y: H * (.5 + .3 * Math.sin(t * .83 + 1.3)) };
+  };
+
+  // 效果宿主：（可选）建画布、跟随尺寸、换算局部指针坐标、管动画循环和暂停。
+  // setup(h) 返回 { resize(W,H), frame(now), down(x,y), theme(), ghostClick }，h 提供 ctx / W / H / P / s / colors()
+  // ghostClick: false 表示幽灵光标不替它“点击”（例如片头，点一下会重播）
+  function canvasHost(el, opts, setup, { canvas = true } = {}) {
+    const cv = canvas ? document.createElement('canvas') : null;
+    if (cv) { cv.className = 'mh-canvas'; el.append(cv); }
+    let ctx, W = 0, H = 0, raf = 0, running = false, lastReal = -1e9, lastGhostClick = 0;
+    const P = { x: -9999, y: -9999, real: false };
+    const seed = hash(effects.length + el.childElementCount);
+    const h = { cv, get ctx() { return ctx; }, get W() { return W; }, get H() { return H; }, P, s: 1, colors: () => colors(el), expanded: !!opts.expanded };
+    const api = setup(h);
+    const size = () => {
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) return;
+      W = r.width; H = r.height; h.s = scaleOf(W); if (cv) ctx = fit(cv, W, H); api.resize && api.resize(W, H);
+      if (!running) api.frame(performance.now());
+    };
+    const ro = new ResizeObserver(size); ro.observe(el);
+    const local = e => { const r = el.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const onMove = e => { [P.x, P.y] = local(e); P.real = true; lastReal = performance.now(); };
+    const onLeave = () => { P.real = false; P.x = P.y = -9999; };
+    const onDown = e => { if (e.target.closest('a, button')) return; lastReal = performance.now(); const [x, y] = local(e); api.down && api.down(x, y); };
+    el.addEventListener('pointermove', onMove); el.addEventListener('pointerleave', onLeave); el.addEventListener('pointerdown', onDown);
+    const mo = new MutationObserver(() => { api.theme && api.theme(); if (!running) api.frame(performance.now()); });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
+    const tick = now => {
+      if (!running) return;
+      // 缩略图里 2.5 秒没人碰，就让幽灵光标接管；偶尔“点”一下展示点击效果
+      if (!h.expanded && now - lastReal > 2500) {
+        const g = ghostAt(now, W, H, seed); P.x = g.x; P.y = g.y;
+        if (api.down && api.ghostClick !== false && now - lastGhostClick > 4200) { lastGhostClick = now; api.down(g.x, g.y); }
+      }
+      if (W && H) api.frame(now);
+      raf = requestAnimationFrame(tick);
+    };
+    size();
+    return {
+      pause() { running = false; cancelAnimationFrame(raf); },
+      resume() { if (running) return; if (still()) { api.frame(performance.now()); return; } running = true; raf = requestAnimationFrame(tick); },
+      destroy() { this.pause(); ro.disconnect(); mo.disconnect(); el.removeEventListener('pointermove', onMove); el.removeEventListener('pointerleave', onLeave); el.removeEventListener('pointerdown', onDown); cv && cv.remove(); },
+    };
+  }
+
+  // 让 CSS 能对自定义属性做补间（遮罩半径等）
+  if (window.CSS && CSS.registerProperty) {
+    for (const name of ['--vr', '--vw']) { try { CSS.registerProperty({ name, syntax: '<length>', inherits: false, initialValue: '0px' }); } catch (e) { /* 已注册 */ } }
+  }
+
+  return { effects, register, defaults, lines, still, clamp, lerp, ease, hash, perlin, fit, colors, tween, scaleOf, ghostAt, canvasHost };
+})();
+</script>
+<script>
+// 点阵拼字片头：画面是时间 t 的纯函数 frame(t)，同一个 t 永远画出同一帧，所以能随时跳到结尾、重播、在任意尺寸重画最后一帧。
+//   0.0–1.3s  网格点从文字中心一圈圈亮起
+//   1.2–3.4s  屏幕外的点沿弧线飞进来，在网格缝隙里拼出文字；字形里的网格点同时变成强调色
+//   3.4–6.0s  字幕依次闪过，每出现一个，从文字中心荡开一圈波纹
+//   6.0–6.8s  收住，最后一帧可以直接当背景“定格”
+MH.register({
+  id: 'intro', name: '点阵拼字片头', cat: '片头', tech: 'Canvas 2D · Pure-Function Timeline · Text Sampling',
+  desc: '网格点亮起，屏幕外的点飞进来拼成文字，字幕依次闪过并荡开波纹；播完定格。点一下重播。',
+  usage: `MH.effects.find(e => e.id === 'intro').mount(el, { text: 'LJY', captions: ['…'] }).resume();`,
+  params: [
+    { k: 'text', label: '拼出的文字', type: 'text', def: 'LJY' },
+    { k: 'captions', label: '字幕（一行一条）', type: 'lines', def: '背景\n过渡\n翻页\n交互' },
+    { k: 'gap', label: '点间距', type: 'range', min: 10, max: 40, step: 1, def: 22, unit: 'px' },
+  ],
+  mount(el, opts) {
+    const TEXT = opts.text || 'LJY', CAPS = MH.lines(opts.captions);
+    const T_END = 6.8, HOLD = 2.6, { clamp, hash } = MH;
+    const ease = t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+    const PULSES = [1.0, 3.4, 4.05, 4.7, 5.35], CAP_AT = k => 3.4 + k * .65;
+    let L = null, C, t0 = performance.now();
+    const layout = (W, H, s) => {
+      const GAP = Math.max(6, opts.gap * s), cx = W / 2, cy = H * .44, fs = Math.min(H * .42, W * .3);
+      const off = document.createElement('canvas'); off.width = Math.ceil(W); off.height = Math.ceil(H);
+      const c = off.getContext('2d');
+      c.font = `700 ${fs}px "Iowan Old Style", Palatino, Georgia, serif`;
+      if ('letterSpacing' in c) c.letterSpacing = `${fs * .06}px`;
+      c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(TEXT, cx, cy);
+      c.lineWidth = fs * .05; c.lineJoin = 'round'; c.strokeText(TEXT, cx, cy); // 加粗细笔画，点阵字才压得住
+      const mask = c.getImageData(0, 0, off.width, off.height).data;
+      const inside = (x, y) => { x = Math.round(x); y = Math.round(y); return x >= 0 && y >= 0 && x < off.width && y < off.height && mask[(y * off.width + x) * 4 + 3] > 120; };
+      const ox = (W % GAP) / 2, oy = (H % GAP) / 2, diag = Math.hypot(W, H), grid = [], fly = [];
+      let k = 0;
+      for (let y = oy; y < H; y += GAP) for (let x = ox; x < W; x += GAP) {
+        grid.push({ x, y, d: Math.hypot(x - cx, y - cy), letter: inside(x, y), h: hash(k++) });
+        if (inside(x + GAP / 2, y + GAP / 2)) {
+          const i = fly.length, a = hash(i * 3 + 1) * Math.PI * 2, R0 = diag * (.6 + .3 * hash(i * 3 + 2));
+          fly.push({ tx: x + GAP / 2, ty: y + GAP / 2, sx: cx + Math.cos(a) * R0, sy: cy + Math.sin(a) * R0, bend: (hash(i * 3 + 3) - .5) * .9, delay: 1.2 + 1.05 * hash(i * 7 + 5) });
+        }
+      }
+      return { W, H, s, cx, cy, grid, fly, diag };
+    };
+    const frame = (ctx, t) => {
+      const { W, H, s, grid, fly, diag, cx, cy } = L;
+      ctx.clearRect(0, 0, W, H);
+      const base = new Path2D(), hot = new Path2D(), add = (p, x, y, r) => { p.moveTo(x + r, y); p.arc(x, y, r, 0, Math.PI * 2); };
+      for (const g of grid) {
+        const appear = clamp((t - g.d / diag * 1.2) / .3); if (appear <= 0) continue;
+        let bump = 0;
+        for (const p of PULSES) { const age = t - p; if (age > 0 && age < 1.6) bump += Math.exp(-(((g.d - age * 900 * s) / (46 * s)) ** 2)) * (1 - age / 1.6); }
+        const ang = Math.atan2(g.y - cy, g.x - cx), push = bump * 7 * s;
+        const lit = g.letter ? clamp((t - 2.5 - g.h * .6) / .4) : 0;
+        add(lit > .5 || bump > .45 ? hot : base, g.x + Math.cos(ang) * push, g.y + Math.sin(ang) * push, (1.05 + bump * 1.6 + lit * 1.2) * Math.max(.6, s) * (.4 + .6 * appear));
+      }
+      for (const f of fly) {
+        const p = clamp((t - f.delay) / 1.15); if (p <= 0) continue;
+        const e = ease(p), mx = (f.sx + f.tx) / 2 - (f.ty - f.sy) * f.bend, my = (f.sy + f.ty) / 2 + (f.tx - f.sx) * f.bend;
+        add(hot, (1 - e) ** 2 * f.sx + 2 * (1 - e) * e * mx + e * e * f.tx, (1 - e) ** 2 * f.sy + 2 * (1 - e) * e * my + e * e * f.ty, (1.2 + 1.1 * e) * Math.max(.6, s));
+      }
+      ctx.fillStyle = C.dim; ctx.globalAlpha = C.night ? .4 : .45; ctx.fill(base);
+      ctx.fillStyle = C.accent; ctx.globalAlpha = 1; ctx.fill(hot);
+      CAPS.forEach((cap, k) => { // 字幕：文字下方居中，带编号
+        const a = t - CAP_AT(k), life = .62; if (a < 0 || a > life) return;
+        const o = clamp(a / .12) * clamp((life - a) / .14), dy = (1 - clamp(a / .2)) * 18 * s, fs = Math.max(14, Math.min(W * .05, 56 * s));
+        ctx.globalAlpha = o; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = C.ink; ctx.font = `900 ${fs}px "Songti SC","STSong","Noto Serif SC",serif`; ctx.fillText(cap, W / 2, H * .86 + dy);
+        ctx.fillStyle = C.accent; ctx.font = `500 ${Math.max(9, fs * .24)}px "SF Mono",Menlo,monospace`;
+        ctx.fillText(`${String(k + 1).padStart(2, '0')} / ${String(CAPS.length).padStart(2, '0')}`, W / 2, H * .86 - fs * 1.05 + dy);
+      });
+      ctx.globalAlpha = 1;
+    };
+    return MH.canvasHost(el, opts, h => {
+      C = h.colors();
+      return {
+        ghostClick: false,
+        resize(W, H) { L = layout(W, H, h.s); },
+        theme() { C = h.colors(); },
+        down() { t0 = performance.now(); },
+        frame(now) {
+          if (!L) return;
+          if (MH.still()) return frame(h.ctx, T_END);
+          const t = ((now - t0) / 1000) % (T_END + HOLD); // 播完定格一会儿，再从头播
+          frame(h.ctx, Math.min(t, T_END));
+        },
+      };
+    });
+  },
+});
+</script>
+<script>
+MH.effects.find(e => e.id === 'intro').mount(document.getElementById('fx'), {
+  "text": "LJY",
+  "captions": [
+    "背景",
+    "过渡",
+    "翻页",
+    "交互"
+  ],
+  "gap": 22
+}).resume();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!doctype html>
+<!--
+  「淡入淡出」 · Motion Hub · MIT + Commons Clause（可免费用于任何项目，不能售卖效果本身）
+
+  【怎么用】
+  这个文件可以直接双击打开，先看效果。
+  想放进自己的项目：把整个文件交给 AI（Claude / ChatGPT / Cursor 等），再说一句你的技术栈和想要的调整，
+  例如“把这个效果改写成 React 组件，放在首屏当背景，颜色换成我的品牌色”。下面的说明就是写给它看的。
+
+  【效果】
+  深浅模式切换时，新的颜色按特定形状盖住旧的。这一种：透明度 0 → 1，作对照。
+
+  【实现原理】
+  - 舞台演示：两层小页面（浅色、深色）叠在一起，新的一层在上面按形状揭开。
+  - clip-path 型（圆形、墨水、斜切、光圈、液面）直接用 Web Animations 补间 clip-path 关键帧。
+  - 遮罩型（点阵扩散、百叶窗、网点溶解、柔光圆）把半径或宽度写成用 CSS.registerProperty 注册的 --vr / --vw，再补间这个变量。
+  - 整页使用：MH.bindThemeToggle(按钮, 切换主题的函数, "fade")，内部是 document.startViewTransition(切换主题)，再对 ::view-transition-new(root) 做同样的动画。
+  - 过渡播完之前再点不生效，等这一次播完才能再切：连点时打断正在播的过渡会显得生硬。
+  - 形状：透明度 0 → 1，作对照。
+
+  【可以调的参数】
+  - 缓动 cubic-bezier(.6,0,.2,1)
+  - 触发点 = 点击位置（键盘触发时用按钮中心）
+
+  【注意】
+  - View Transitions 支持 Chrome / Edge 111+、Safari 18+；不支持或开启“减少动态效果”时直接切换。
+  - 旧快照和新快照都要 animation: none，只让新快照按形状出现。
+  - 如果背景有 canvas 动画，点切换按钮时不要再触发背景的点击效果，否则会被快照冻住。
+  - 颜色都来自 CSS 变量（paper / ink / dim / rule / accent），换成项目自己的颜色即可。
+  - 要处理 prefers-reduced-motion：系统要求减少动态效果时只显示静止画面。
+  - 组件卸载时要停掉动画循环、移除事件监听（mount 返回的 destroy）。
+
+  【opts 参数】（mount 的第二个参数，不传就用默认值；文件末尾的 mount 调用里是你在 Motion Hub 上调好的值）
+  - dur：时长，默认 400（200–2400ms）
+
+  【代码结构】
+  - <style>：配色变量和这个效果用到的样式
+  - 第一段 <script>：MH 核心（注册表、噪声、缓动；canvasHost 负责画布尺寸、指针坐标、动画循环和暂停）
+  - 第二段 <script>：效果本身，核心是 MH.register 里的 mount(el, opts)，返回 { pause, resume, destroy }
+  - 最后一段 <script>：把效果挂到 #fx 上并启动
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>淡入淡出</title>
+<style>
+/* Motion Hub 效果样式：配色变量（Acid：浅色暖灰 + 紫罗兰，深色近黑 + 酸橙绿）+ 各效果用到的样式 + 整页过渡遮罩。按“@css 名称”标记分段，复制代码时只带用到的段。 */
+:root{
+  --paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E;
+  --serif:"Songti SC","STSong","Noto Serif SC",serif;
+  --sans:"PingFang SC","Helvetica Neue","Noto Sans SC",sans-serif;
+  --latin:"Iowan Old Style",Palatino,Georgia,serif;
+  --mono:"SF Mono",Menlo,monospace;
+}
+[data-theme="night"]{--paper:#111113;--paper2:#1B1B1F;--ink:#F2F1F5;--body:#C4C2CC;--dim:#7E7B88;--rule:#2A2A30;--accent:#C6F21E;--on-accent:#111113;--hi:#8E75FF}
+[data-theme="day"]{--paper:#F1F0EC;--paper2:#E4E2DC;--ink:#141316;--body:#3A383F;--dim:#85828C;--rule:#D6D3CC;--accent:#6B4EFF;--on-accent:#fff;--hi:#C6F21E}
+
+/* 深浅过渡的小页面 */
+.tt{position:absolute;inset:0;overflow:hidden;perspective:1400px;background:#0b0b0c;cursor:pointer}
+.tt-scene{position:absolute;inset:0;background:var(--paper) radial-gradient(circle,color-mix(in srgb,var(--dim) 45%,transparent) 1.1px,transparent 1.6px) 0 0/22px 22px;color:var(--ink);backface-visibility:hidden}
+.tt-mock{position:absolute;left:8%;top:50%;transform:translateY(-50%);width:60%}
+.tt-mock .tt-tag{font:500 2.2cqw/1 var(--sans);letter-spacing:.3em;color:var(--accent)}
+.tt-mock b{display:block;margin-top:1.4cqw;font:900 15cqw/1 var(--serif)}
+.tt-mock i{display:block;height:1.1cqw;margin-top:2.2cqw;background:var(--rule);width:80%}
+.tt-mock i.short{width:46%;background:var(--accent)}
+.tt-scene[data-fx="dots"]{
+  -webkit-mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--band)),transparent calc(var(--vr) - var(--band) + 1px)),radial-gradient(circle,#000 calc(var(--tile) * .25),transparent calc(var(--tile) * .28)),radial-gradient(circle at var(--vx) var(--vy),transparent calc(var(--vr) - var(--band) - 10px),#000 calc(var(--vr) - var(--band)),#000 var(--vr),transparent var(--vr));
+  -webkit-mask-size:100% 100%,var(--tile) var(--tile),100% 100%;-webkit-mask-composite:source-over,source-in;
+  mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--band)),transparent calc(var(--vr) - var(--band) + 1px)),radial-gradient(circle,#000 calc(var(--tile) * .25),transparent calc(var(--tile) * .28)),radial-gradient(circle at var(--vx) var(--vy),transparent calc(var(--vr) - var(--band) - 10px),#000 calc(var(--vr) - var(--band)),#000 var(--vr),transparent var(--vr));
+  mask-size:100% 100%,var(--tile) var(--tile),100% 100%;mask-composite:add,intersect}
+.tt-scene[data-fx="blinds"]{-webkit-mask-image:repeating-linear-gradient(90deg,#000 0 var(--vw),transparent var(--vw) var(--period));mask-image:repeating-linear-gradient(90deg,#000 0 var(--vw),transparent var(--vw) var(--period))}
+.tt-scene[data-fx="halftone"]{-webkit-mask-image:radial-gradient(circle,#000 var(--vr),transparent calc(var(--vr) + .5px));-webkit-mask-size:var(--tile) var(--tile);mask-image:radial-gradient(circle,#000 var(--vr),transparent calc(var(--vr) + .5px));mask-size:var(--tile) var(--tile)}
+.tt-scene[data-fx="soft"]{-webkit-mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--soft)),transparent var(--vr));mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--soft)),transparent var(--vr))}
+
+/* 整页深浅切换（MH.themeSwitch，View Transitions） */
+[data-vfx]:not([data-vfx="fade"])::view-transition-old(root),[data-vfx]:not([data-vfx="fade"])::view-transition-new(root){animation:none;mix-blend-mode:normal}
+[data-vfx="dots"]::view-transition-new(root){
+  -webkit-mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--band)),transparent calc(var(--vr) - var(--band) + 1px)),radial-gradient(circle,#000 calc(var(--tile) * .25),transparent calc(var(--tile) * .28)),radial-gradient(circle at var(--vx) var(--vy),transparent calc(var(--vr) - var(--band) - 10px),#000 calc(var(--vr) - var(--band)),#000 var(--vr),transparent var(--vr));
+  -webkit-mask-size:100% 100%,var(--tile) var(--tile),100% 100%;-webkit-mask-composite:source-over,source-in;
+  mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--band)),transparent calc(var(--vr) - var(--band) + 1px)),radial-gradient(circle,#000 calc(var(--tile) * .25),transparent calc(var(--tile) * .28)),radial-gradient(circle at var(--vx) var(--vy),transparent calc(var(--vr) - var(--band) - 10px),#000 calc(var(--vr) - var(--band)),#000 var(--vr),transparent var(--vr));
+  mask-size:100% 100%,var(--tile) var(--tile),100% 100%;mask-composite:add,intersect}
+[data-vfx="blinds"]::view-transition-new(root){-webkit-mask-image:repeating-linear-gradient(90deg,#000 0 var(--vw),transparent var(--vw) var(--period));mask-image:repeating-linear-gradient(90deg,#000 0 var(--vw),transparent var(--vw) var(--period))}
+[data-vfx="halftone"]::view-transition-new(root){-webkit-mask-image:radial-gradient(circle,#000 var(--vr),transparent calc(var(--vr) + .5px));-webkit-mask-size:var(--tile) var(--tile);mask-image:radial-gradient(circle,#000 var(--vr),transparent calc(var(--vr) + .5px));mask-size:var(--tile) var(--tile)}
+[data-vfx="soft"]::view-transition-new(root){-webkit-mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--soft)),transparent var(--vr));mask-image:radial-gradient(circle at var(--vx) var(--vy),#000 calc(var(--vr) - var(--soft)),transparent var(--vr))}
+[data-vfx="flip"]::view-transition-group(root){background:#0b0b0c}
+[data-vfx="flip"]::view-transition-old(root),[data-vfx="flip"]::view-transition-new(root){backface-visibility:hidden}
+html,body{height:100%;margin:0;background:var(--paper)}
+#fx{position:relative;height:100vh;overflow:hidden;container-type:size}
+</style>
+</head>
+<body>
+<div id="fx"></div>
+<script>
+// Motion Hub 核心：注册表 + 公共工具。所有效果文件都是普通 <script>（不是 ES 模块），
+// 这样直接双击 index.html（file://）也能运行。每个效果调用 MH.register({...}) 把自己登记进来。
+//
+// 效果对象的约定：
+//   id      唯一标识（小写短横线）
+//   name    中文名
+//   cat     分类：背景 / 过渡 / 翻页 / 片头 / 交互
+//   tech    用到的技术（展示用）
+//   desc    一句话说明
+//   mount(el, opts) → { pause(), resume(), destroy() }
+//     el 是一个已经有尺寸的容器；opts.expanded 为 true 表示全屏体验（关掉幽灵光标、允许滚轮等）
+//   params  可调参数（可选），实验台据此生成参数面板，每项 { k, label, type, def, ... }：
+//     type 'range'：数值滑块，带 min / max / step，可选 unit；'text'：单行文字；'lines'：多行文字，一行一项
+//     mount 拿到的 opts 已经按 def 补齐（register 里包了一层），效果代码直接读 opts.k 即可
+window.MH = (() => {
+  const effects = [];
+  // 记下效果来自哪个文件（复制代码时只带这个文件）
+  const register = e => {
+    const src = document.currentScript && document.currentScript.src; e.file = e.file || (src ? src.split('/').pop() : '');
+    if (e.params) { const m = e.mount; e.mount = (el, opts = {}) => m.call(e, el, { ...defaults(e), ...opts }); }
+    effects.push(e);
+  };
+  const defaults = e => Object.fromEntries((e.params || []).map(p => [p.k, p.def]));
+  // 'lines' 参数：数组原样返回；字符串按行拆开，去掉空行
+  const lines = v => Array.isArray(v) ? v : String(v || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const ease = {
+    in: t => t * t * t,
+    out: t => 1 - (1 - t) ** 3,
+    inOut: t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2,
+    back: t => { const c = 1.4; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; },
+  };
+  const hash = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+  // 二维 Perlin 噪声，seed 决定排列表
+  function perlin(seed = 1) {
+    const P = new Uint8Array(512), p = [...Array(256).keys()];
+    let s = seed;
+    for (let i = 255; i > 0; i--) { s = (s * 16807) % 2147483647; const j = s % (i + 1); [p[i], p[j]] = [p[j], p[i]]; }
+    for (let i = 0; i < 512; i++) P[i] = p[i & 255];
+    const fade = t => t * t * t * (t * (t * 6 - 15) + 10), grad = (h, x, y) => ((h & 1) ? -x : x) + ((h & 2) ? -y : y);
+    return (x, y) => {
+      const X = Math.floor(x) & 255, Y = Math.floor(y) & 255; x -= Math.floor(x); y -= Math.floor(y);
+      const u = fade(x), v = fade(y), a = P[X] + Y, b = P[X + 1] + Y;
+      const l1 = grad(P[a], x, y) + u * (grad(P[b], x - 1, y) - grad(P[a], x, y));
+      const l2 = grad(P[a + 1], x, y - 1) + u * (grad(P[b + 1], x - 1, y - 1) - grad(P[a + 1], x, y - 1));
+      return l1 + v * (l2 - l1);
+    };
+  }
+
+  // 画布按设备像素比放大，画的时候仍用 CSS 像素坐标
+  function fit(cv, w, h) {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return ctx;
+  }
+  // 从容器读主题色（--paper / --ink / --dim / --rule / --accent）
+  function colors(el) {
+    const cs = getComputedStyle(el), v = n => cs.getPropertyValue(n).trim();
+    const t = el.closest('[data-theme]');
+    return { paper: v('--paper'), ink: v('--ink'), dim: v('--dim'), rule: v('--rule'), accent: v('--accent'), night: !!t && t.dataset.theme === 'night' };
+  }
+  // 一段时长 ms 的补间，fn(k) 中 k 从 0 到 1；减少动态效果时直接到终点
+  const tween = (ms, fn) => new Promise(res => {
+    if (still()) { fn(1); return res(); }
+    const t0 = performance.now();
+    const f = now => { const k = clamp((now - t0) / ms); fn(k); k < 1 ? requestAnimationFrame(f) : res(); };
+    requestAnimationFrame(f);
+  });
+  // 尺寸缩放系数：全屏约 1，缩略图约 0.45，让小画面像“整页缩小”而不是挤满细节
+  const scaleOf = W => clamp(W / 1200, .45, 1);
+
+  // 幽灵光标：没人操作时，沿一条利萨如曲线在容器里慢慢移动，让缩略图自己演示交互
+  const ghostAt = (now, W, H, seed = 0) => {
+    const t = now / 1000 + seed * 7;
+    return { x: W * (.5 + .32 * Math.sin(t * .55) * Math.cos(t * .21)), y: H * (.5 + .3 * Math.sin(t * .83 + 1.3)) };
+  };
+
+  // 效果宿主：（可选）建画布、跟随尺寸、换算局部指针坐标、管动画循环和暂停。
+  // setup(h) 返回 { resize(W,H), frame(now), down(x,y), theme(), ghostClick }，h 提供 ctx / W / H / P / s / colors()
+  // ghostClick: false 表示幽灵光标不替它“点击”（例如片头，点一下会重播）
+  function canvasHost(el, opts, setup, { canvas = true } = {}) {
+    const cv = canvas ? document.createElement('canvas') : null;
+    if (cv) { cv.className = 'mh-canvas'; el.append(cv); }
+    let ctx, W = 0, H = 0, raf = 0, running = false, lastReal = -1e9, lastGhostClick = 0;
+    const P = { x: -9999, y: -9999, real: false };
+    const seed = hash(effects.length + el.childElementCount);
+    const h = { cv, get ctx() { return ctx; }, get W() { return W; }, get H() { return H; }, P, s: 1, colors: () => colors(el), expanded: !!opts.expanded };
+    const api = setup(h);
+    const size = () => {
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) return;
+      W = r.width; H = r.height; h.s = scaleOf(W); if (cv) ctx = fit(cv, W, H); api.resize && api.resize(W, H);
+      if (!running) api.frame(performance.now());
+    };
+    const ro = new ResizeObserver(size); ro.observe(el);
+    const local = e => { const r = el.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const onMove = e => { [P.x, P.y] = local(e); P.real = true; lastReal = performance.now(); };
+    const onLeave = () => { P.real = false; P.x = P.y = -9999; };
+    const onDown = e => { if (e.target.closest('a, button')) return; lastReal = performance.now(); const [x, y] = local(e); api.down && api.down(x, y); };
+    el.addEventListener('pointermove', onMove); el.addEventListener('pointerleave', onLeave); el.addEventListener('pointerdown', onDown);
+    const mo = new MutationObserver(() => { api.theme && api.theme(); if (!running) api.frame(performance.now()); });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
+    const tick = now => {
+      if (!running) return;
+      // 缩略图里 2.5 秒没人碰，就让幽灵光标接管；偶尔“点”一下展示点击效果
+      if (!h.expanded && now - lastReal > 2500) {
+        const g = ghostAt(now, W, H, seed); P.x = g.x; P.y = g.y;
+        if (api.down && api.ghostClick !== false && now - lastGhostClick > 4200) { lastGhostClick = now; api.down(g.x, g.y); }
+      }
+      if (W && H) api.frame(now);
+      raf = requestAnimationFrame(tick);
+    };
+    size();
+    return {
+      pause() { running = false; cancelAnimationFrame(raf); },
+      resume() { if (running) return; if (still()) { api.frame(performance.now()); return; } running = true; raf = requestAnimationFrame(tick); },
+      destroy() { this.pause(); ro.disconnect(); mo.disconnect(); el.removeEventListener('pointermove', onMove); el.removeEventListener('pointerleave', onLeave); el.removeEventListener('pointerdown', onDown); cv && cv.remove(); },
+    };
+  }
+
+  // 让 CSS 能对自定义属性做补间（遮罩半径等）
+  if (window.CSS && CSS.registerProperty) {
+    for (const name of ['--vr', '--vw']) { try { CSS.registerProperty({ name, syntax: '<length>', inherits: false, initialValue: '0px' }); } catch (e) { /* 已注册 */ } }
+  }
+
+  return { effects, register, defaults, lines, still, clamp, lerp, ease, hash, perlin, fit, colors, tween, scaleOf, ghostAt, canvasHost };
+})();
+</script>
+<script>
+// 深浅切换过渡。两种用法：
+//   1. 缩略图 / 全屏体验：容器里叠两层“小页面”（浅色、深色），新的一层按选定形状盖上去。不依赖 View Transitions。
+//   2. 真实网站：MH.themeSwitch(event, apply, fx) 用 View Transitions 给整页做同样的过渡（见本文件末尾）。
+// 形状函数 shape(x, y, R, W, H, s) 返回 WAAPI 关键帧；x/y 是触发点，R 是触发点到最远角的距离，s 是缩放系数。
+(() => {
+  const FX = {
+    circle: { name: '圆形揭开', dur: 650, desc: '从点击处放大一个圆，盖住整页。',
+      shape: (x, y, R) => [{ clipPath: `circle(0px at ${x}px ${y}px)` }, { clipPath: `circle(${R}px at ${x}px ${y}px)` }] },
+    ink: { name: '墨水晕开', dur: 900, desc: '从点击处开始，边缘是圆润的不规则形，先快后慢，像墨滴洇开。',
+      shape: (x, y, R) => {
+        const N = 96, ph = [0, 0, 0].map(() => Math.random() * 6.28);
+        const wob = Array.from({ length: N }, (_, i) => { const a = i / N * Math.PI * 2; return .88 + .07 * Math.sin(3 * a + ph[0]) + .05 * Math.sin(5 * a + ph[1]) + .03 * Math.sin(8 * a + ph[2]); });
+        const ring = k => `polygon(${wob.map((w, i) => { const a = i / N * Math.PI * 2, r = R * k * (k < 1 ? w : 1.3); return `${(x + Math.cos(a) * r).toFixed(1)}px ${(y + Math.sin(a) * r).toFixed(1)}px`; }).join(',')})`;
+        return [{ clipPath: ring(0) }, { clipPath: ring(.45), offset: .4 }, { clipPath: ring(1.25) }];
+      } },
+    dots: { name: '点阵扩散', dur: 1000, desc: '前沿是一圈网点，后面才是实心，适合配点阵背景。',
+      shape: (x, y, R, W, H, s) => [{ '--vr': '0px' }, { '--vr': `${R + 180 * s}px` }] },
+    blinds: { name: '百叶窗', dur: 700, desc: '一条条竖帘同时翻开，利落、有节奏。',
+      shape: (x, y, R, W, H, s) => [{ '--vw': '0px' }, { '--vw': `${72 * s}px` }] },
+    slice: { name: '斜切扫过', dur: 750, desc: '一道斜边从点击的那一侧扫向另一侧。',
+      shape: (x, y, R, W) => {
+        const L = x < W / 2, P = k => L ? `polygon(0 0, ${k}% 0, ${k - 35}% 100%, 0 100%)` : `polygon(100% 0, ${100 - k}% 0, ${135 - k}% 100%, 100% 100%)`;
+        return [{ clipPath: P(0) }, { clipPath: P(140) }];
+      } },
+    iris: { name: '光圈快门', dur: 800, desc: '六边形从点击处旋转着张开，像相机光圈。',
+      shape: (x, y, R) => Array.from({ length: 25 }, (_, f) => {
+        const k = f / 24, r = R * 1.25 * (k * k * (3 - 2 * k)), rot = k * 2.2;
+        return { clipPath: `polygon(${Array.from({ length: 6 }, (_, i) => { const a = rot + i * Math.PI / 3; return `${(x + Math.cos(a) * r).toFixed(1)}px ${(y + Math.sin(a) * r).toFixed(1)}px`; }).join(',')})` };
+      }) },
+    wave: { name: '液面上涨', dur: 1100, desc: '新颜色像水一样从底部涨上来，水面起伏。',
+      shape: (x, y, R, W, H, s) => Array.from({ length: 31 }, (_, f) => {
+        const k = f / 30, level = H * (1.08 - k * 1.25), amp = 46 * s * Math.sin(Math.PI * k), N = 32;
+        const top = Array.from({ length: N + 1 }, (_, i) => `${(W * i / N).toFixed(1)}px ${(level + amp * Math.sin(i / N * Math.PI * 3 + k * 9)).toFixed(1)}px`);
+        return { clipPath: `polygon(0 ${H}px, ${top.join(',')}, ${W}px ${H}px)` };
+      }) },
+    halftone: { name: '网点溶解', dur: 750, desc: '整屏同时长出印刷网点，越长越大，直到连成一片。',
+      shape: (x, y, R, W, H, s) => [{ '--vr': '0px' }, { '--vr': `${14 * s}px` }] },
+    soft: { name: '柔光圆', dur: 800, desc: '和圆形揭开一样从点击处扩散，但边缘是一圈柔和的渐隐。',
+      shape: (x, y, R, W, H, s) => [{ '--vr': '0px' }, { '--vr': `${R + 260 * s}px` }] },
+    flip: { name: '翻页', dur: 900, desc: '整页像卡片一样绕竖轴翻过去，背面就是另一种颜色。', shape: null },
+    fade: { name: '淡入淡出', dur: 400, desc: '最普通的渐变，作对照。', shape: () => [{ opacity: 0 }, { opacity: 1 }] },
+  };
+  const EASE = 'cubic-bezier(.6,0,.2,1)';
+  // 遮罩里用到的尺寸（随缩放系数变）：点阵前沿宽度、网点格子、柔光边宽、百叶窗周期
+  const sizeVars = (el, s) => {
+    el.style.setProperty('--band', `${160 * s}px`); el.style.setProperty('--tile', `${18 * s}px`);
+    el.style.setProperty('--soft', `${260 * s}px`); el.style.setProperty('--period', `${72 * s}px`);
+  };
+
+  // 小页面：同一份内容，浅色一层、深色一层
+  const scene = theme => `<div class="tt-scene" data-theme="${theme}"><div class="tt-mock">
+    <span class="tt-tag">${theme === 'night' ? '深色' : '浅色'}</span><b>Aa</b><i></i><i></i><i class="short"></i></div></div>`;
+
+  function mountTransition(id) {
+    const fx = FX[id];
+    return (el, opts) => {
+      el.insertAdjacentHTML('beforeend', `<div class="tt">${scene('day')}${scene('night')}</div>`);
+      const box = el.lastElementChild, [day, night] = box.children;
+      let cur = 'day', running = false, timer = 0, lastReal = -1e9, settle = null;
+      night.style.visibility = 'hidden';
+      // 过渡播完之前再点不生效，等这一次播完才能再切（连点时被打断很生硬）
+      const play = (x, y) => {
+        if (settle) return;
+        const W = box.clientWidth, H = box.clientHeight, s = MH.scaleOf(W), R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y));
+        const top = cur === 'day' ? night : day, bottom = cur === 'day' ? day : night;
+        cur = cur === 'day' ? 'night' : 'day'; // 目标状态立刻生效
+        sizeVars(top, s); top.style.setProperty('--vx', x + 'px'); top.style.setProperty('--vy', y + 'px');
+        top.dataset.fx = id; top.style.zIndex = 2; bottom.style.zIndex = 1; top.style.visibility = 'visible';
+        const anims = []; let done = false;
+        settle = () => {
+          if (done) return; done = true; settle = null;
+          anims.forEach(a => a.cancel());
+          delete top.dataset.fx; top.style.visibility = 'visible'; bottom.style.visibility = 'hidden';
+          top.style.zIndex = 1; bottom.style.zIndex = 0;
+        };
+        if (MH.still()) return settle();
+        const quiet = () => {}; // 被打断时动画会被 cancel，finished 会 reject，忽略即可
+        if (id === 'flip') {
+          const o = { duration: opts.dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
+          top.style.visibility = 'hidden';
+          const a1 = bottom.animate([{ transform: 'rotateY(0)' }, { transform: 'rotateY(90deg)' }], o); anims.push(a1);
+          a1.finished.then(() => {
+            if (done) return;
+            top.style.visibility = 'visible'; bottom.style.visibility = 'hidden';
+            const a2 = top.animate([{ transform: 'rotateY(-90deg)' }, { transform: 'rotateY(0)' }], o); anims.push(a2);
+            a2.finished.then(settle, quiet);
+          }, quiet);
+        } else {
+          const a = top.animate(fx.shape(x, y, R, W, H, s), { duration: opts.dur, easing: EASE, fill: 'forwards' }); anims.push(a);
+          a.finished.then(settle, quiet);
+        }
+      };
+      const onDown = e => { lastReal = performance.now(); const r = box.getBoundingClientRect(); play(e.clientX - r.left, e.clientY - r.top); };
+      box.addEventListener('pointerdown', onDown);
+      // 缩略图里没人点的时候，每隔一会儿在“幽灵光标”的位置自己触发一次
+      const auto = () => {
+        if (!running) return;
+        if (!opts.expanded && performance.now() - lastReal > 3000) { const g = MH.ghostAt(performance.now(), box.clientWidth, box.clientHeight, MH.hash(id.length)); play(g.x, g.y); }
+        timer = setTimeout(auto, 2600 + opts.dur);
+      };
+      return {
+        pause() { running = false; clearTimeout(timer); },
+        resume() { if (running || MH.still()) return; running = true; timer = setTimeout(auto, 900); },
+        destroy() { this.pause(); box.removeEventListener('pointerdown', onDown); box.remove(); },
+      };
+    };
+  }
+  for (const [id, fx] of Object.entries(FX)) {
+    MH.register({ id: `theme-${id}`, name: fx.name, cat: '过渡', tech: 'View Transitions API · ' + (id === 'flip' ? 'WAAPI · 3D Transform' : (/dots|blinds|halftone|soft/.test(id) ? 'CSS Mask · @property' : 'WAAPI · clip-path')), desc: fx.desc + ' 点画面任意位置触发。',
+      params: [{ k: 'dur', label: '时长', type: 'range', min: 200, max: 2400, step: 50, def: fx.dur, unit: 'ms' }], mount: mountTransition(id) });
+  }
+
+  // ───── 真实网站用：整页深浅切换 ─────
+  // apply() 负责真正改主题（例如切换 <html data-theme>）；不支持 View Transitions 或减少动态效果时直接调用 apply()。
+  // 过渡播完之前再点不生效，等这一次播完才能再切。
+  let active = null;
+  // o.dur 可以改时长（毫秒），不传就用这个效果的默认时长
+  MH.themeSwitch = (e, apply, id = 'dots', o = {}) => {
+    const fx = FX[id] || FX.dots, root = document.documentElement, dur = o.dur || fx.dur;
+    if (!document.startViewTransition || MH.still()) return apply();
+    if (active) return;
+    const r = e.currentTarget && e.currentTarget.getBoundingClientRect ? e.currentTarget.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
+    const x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
+    const W = innerWidth, H = innerHeight, R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y)), s = 1;
+    root.dataset.vfx = id; sizeVars(root, s);
+    root.style.setProperty('--vx', x + 'px'); root.style.setProperty('--vy', y + 'px');
+    const vt = document.startViewTransition(apply); active = vt;
+    vt.ready.then(() => {
+      if (id === 'flip') {
+        const o = { duration: dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
+        root.animate([{ transform: 'perspective(1800px) rotateY(0)' }, { transform: 'perspective(1800px) rotateY(90deg)' }], { ...o, pseudoElement: '::view-transition-old(root)' });
+        root.animate([{ transform: 'perspective(1800px) rotateY(-90deg)' }, { transform: 'perspective(1800px) rotateY(0)' }], { ...o, delay: dur / 2, pseudoElement: '::view-transition-new(root)' });
+      } else if (fx.shape && id !== 'fade') {
+        // fill: 'forwards'：停在最后一帧，否则过渡层撤掉前会有一帧遮罩归零，整屏闪回旧颜色
+        root.animate(fx.shape(x, y, R, W, H, s), { duration: dur, easing: EASE, fill: 'forwards', pseudoElement: '::view-transition-new(root)' });
+      }
+    }).catch(() => {});
+    vt.finished.finally(() => { if (active === vt) { active = null; delete root.dataset.vfx; } });
+  };
+  // 绑定深浅开关（过渡播完之前再点不生效）
+  MH.bindThemeToggle = (btn, apply, id = 'dots', o = {}) => btn.addEventListener('click', e => MH.themeSwitch(e, apply, id, o));
+  MH.themeFx = Object.keys(FX);
+})();
+</script>
+<script>
+// 舞台演示：点画面任意位置切换
+MH.effects.find(e => e.id === 'theme-fade').mount(document.getElementById('fx'), {
+  "dur": 400
+}).resume();
+// 整页深浅切换（View Transitions，过渡播完前再点不生效）：
+// MH.bindThemeToggle(button, () => {
+//   const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'night' ? 'day' : 'night';
+// }, 'fade', { dur: 400 });
+</script>
+</body>
+</html>

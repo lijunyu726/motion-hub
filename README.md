@@ -117,6 +117,16 @@ node tools/smoke.mjs --night --mobile
 
 </details>
 
+## 作为 Agent Skill 使用
+
+`skill/motion-hub/` 是一个 [Agent Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)：`SKILL.md` 是给 AI 的入口说明和全部效果的索引，`effects/` 里是 23 个“Prompt + 代码”单文件（和实验台复制出来的一样，默认参数）。装好以后直接对 AI 说“给首页加一个等高线背景”“深浅切换换成点阵扩散”，它会自己挑效果、读原理、按你的技术栈改写。
+
+- **下载**：实验台右上角的「Skill ↓」，或 https://motion.lijunyu.com.cn/skill/motion-hub.zip
+- **Claude Code**：解压到 `~/.claude/skills/`（所有项目可用）或项目里的 `.claude/skills/`（只给这个项目）。
+- **其他支持 Agent Skills 的工具**：按各自的说明安装这个文件夹。
+
+Skill 自带全部代码，使用时不需要联网，也不会访问本站或仓库；效果有更新时重新下载即可。源码改动后用 `npm run skill` 重新生成（部署脚本会自动生成并打包）。
+
 ## 参与
 
 欢迎提 Issue 和 Pull Request，步骤见 [CONTRIBUTING.md](CONTRIBUTING.md)。
