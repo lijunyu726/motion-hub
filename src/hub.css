@@ -83,6 +83,7 @@ button{font:inherit;color:inherit}
 .use .copy:disabled{opacity:.4;cursor:default}
 .ft-bar{height:44px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 28px;font:500 12px/1 var(--ui);color:var(--dim)}
 .ft-bar a:hover{color:var(--ink)}
+.ft-bar .beian{display:flex;flex-wrap:wrap;gap:6px 18px}.ft-bar .psb{display:inline-flex;align-items:center;gap:6px}.ft-bar .psb img{width:14px;height:14px;flex:none}
 
 /* ───── 顶栏深浅开关的过渡：胶囊展开（只给实验台自己用，和名单里的 11 个过渡效果无关）
    新页面先从按钮处横向拉成一条胶囊，再上下撑满整屏；旧页面同时往后退一点 ───── */
