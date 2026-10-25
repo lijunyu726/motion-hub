@@ -71,11 +71,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hostip span{font-size:10.5px;letter-spacing:.1em;color:var(--dim)}
 .clock{margin-top:16px;font:300 30px/1.1 var(--mono);letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .clock small{font:400 12px var(--sans);color:var(--dim);letter-spacing:.12em;margin-left:10px}
-.sub{margin-top:8px;color:var(--dim);font-size:11.5px;letter-spacing:.06em}
-.sub .moon{margin-left:12px;display:inline-flex;align-items:center;gap:6px;transition:opacity .6s}
-.sub .moon::before{content:"·";margin-right:6px}
-.sub .moon.down{opacity:.55}
-#moonc{width:13px;height:13px;display:block}
 .tally{margin-top:18px;display:flex;gap:18px;font-size:11px;color:var(--faint);letter-spacing:.08em}
 .tally span+span::before{content:"·";margin-right:18px;color:var(--faint)}
 .tally b{font:400 13px var(--mono);margin-right:5px;letter-spacing:0;font-variant-numeric:tabular-nums}
@@ -91,7 +86,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* 画法切换：顶部正中排一行（地球上方、两栏之间；刊头底下要留给服务器那一栏） */
 .styles{position:fixed;left:360px;right:320px;top:24px;display:flex;justify-content:center;gap:18px;pointer-events:auto}
 .styles .grp{display:flex;align-items:center;gap:1px}
-.styles .gl{flex:none;width:20px;font-size:10px;letter-spacing:.2em;color:var(--faint)}
 .styles button{position:relative;display:flex;align-items:center;gap:6px;padding:3px 9px 3px 4px;border-radius:999px;color:var(--faint);font-size:11px;letter-spacing:.1em;transition:color .25s,background-color .25s}
 .styles button:hover{color:var(--dim)}
 .styles button.on{color:var(--ink);background:color-mix(in srgb,var(--ink) 8%,transparent)}
@@ -198,7 +192,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .ttl span{font-size:10px;letter-spacing:.1em}
   .clock{font-size:21px;margin-top:8px}
   .clock small{display:none}
-  .sub{font-size:10.5px;margin-top:4px}
   .tally{margin-top:10px;gap:10px;font-size:10px}
   .tally span+span::before{margin-right:10px}
   .tally b{font-size:12px;margin-right:3px}
@@ -206,7 +199,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .styles{position:fixed;left:auto;right:8px;top:36px;margin:0;display:flex;gap:0;justify-content:flex-start}
   .styles .grp{gap:0}
   .styles .grp+.grp{margin-left:4px;padding-left:4px;border-left:1px solid var(--line)}
-  .styles .gl,.styles span,.styles kbd{display:none}
+  .styles span,.styles kbd{display:none}
   .styles button{padding:5px}
   .styles button.on{background:none}
   .styles i{width:13px;height:13px}
@@ -229,7 +222,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .tl{height:40px}
   .spd button{padding:4px 5px;font-size:10px}
   .note{left:18px;bottom:auto;top:16px;right:18px;text-align:right;font-size:9.5px;letter-spacing:.06em}
-  .note span{display:none}
   .hostip{gap:10px;margin-top:5px;cursor:pointer}
   .hostip b{font-size:13px}
   .hostip span{display:none}
