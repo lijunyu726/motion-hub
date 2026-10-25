@@ -72,22 +72,31 @@
 </footer>
 <script>
 const $ = id => document.getElementById(id);
-const CATS = ['背景', '过渡', '翻页', '片头', '交互'];
-// 作品：整页的独立作品，不在舞台上跑，点了打开它自己的页面（globe/ 由 tc-console 的 tools/globe/export-hub.mjs 导出）
-const WORKS = [{ name: '服务器监控地球', href: 'globe/index.html', desc: '按真实昼夜转动的地球，访问画成飞向服务器的弧线；深空、铜版、白昼、水墨四种画法，演示数据' }];
+const CATS = ['背景', '过渡', '翻页', '片头', '交互', '作品'];
+// 作品：整页的完整作品，在舞台里用 iframe 打开它自己的页面；“复制 Prompt + 代码”的内容点到时才加载（globe/source.js）。
+// globe/ 由 tc-console 的 tools/globe/export-hub.mjs 导出，不要手改
+const WORKS = [{
+  id: 'globe', cat: '作品', name: '服务器监控地球', dir: 'globe/',
+  desc: '一颗按真实昼夜转动的地球，各地来的访问画成飞向服务器的弧线；站点状态、人和机器两张榜、按天回放。右上角切换深空、铜版、白昼、水墨四种画法。演示数据。',
+  tech: 'WebGL2 · 真实太阳月亮位置 · NASA 地表与夜光 · 着色器换风格',
+  mount(el) {
+    const f = document.createElement('iframe'); f.className = 'work'; f.src = this.dir + 'index.html'; f.title = this.name;
+    el.append(f); return { pause() {}, resume() {}, destroy() { f.remove(); } };
+  },
+}];
 // 分类的英文名，显示成小字
-const CAT_EN = { 背景: 'Backgrounds', 过渡: 'Theme Transitions', 翻页: 'Page Turn', 片头: 'Intro', 交互: 'Interactions' };
+const CAT_EN = { 背景: 'Backgrounds', 过渡: 'Theme Transitions', 翻页: 'Page Turn', 片头: 'Intro', 交互: 'Interactions', 作品: 'Works' };
 // 每个效果需要 effects.css 里的哪几段样式（base 总是带上）
 const CSS_OF = id => id.startsWith('theme-') ? ['tt', 'vfx'] : ({ pull: ['pd'], 'sun-moon': ['sm', 'ui-center', 'sm-stage'], 'glow-card': ['gc'], scramble: ['sc'], 'follow-tip': ['ft'], pipeline: ['pl'] })[id] || ['canvas'];
-const list = MH.effects.slice().sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat));
-$('count').textContent = `${list.length} 个效果 · ${CATS.length} 类`;
+const list = MH.effects.slice().sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat)).concat(WORKS);
+$('count').textContent = `${MH.effects.length} 个效果 · ${WORKS.length} 个作品`;
 
 // 左侧名单：按分类分组，每类标数量
 // 序号在每个分类里从 01 重新开始
 $('list').innerHTML = CATS.map(c => {
   const items = list.filter(e => e.cat === c);
   return `<h2>${c}<em>${CAT_EN[c]}</em><span>${items.length}</span></h2>` + items.map((e, i) => `<button type="button" data-id="${e.id}"><i>${String(i + 1).padStart(2, '0')}</i>${e.name}</button>`).join('');
-}).join('') + `<h2>作品<em>Works</em><span>${WORKS.length}</span></h2>` + WORKS.map((w, i) => `<a class="work" href="${w.href}" title="${w.desc}"><i>${String(i + 1).padStart(2, '0')}</i>${w.name}<b aria-hidden="true">↗</b></a>`).join('');
+}).join('');
 
 // 舞台：同一时间只运行一个效果；切换时销毁旧的
 let cur = null, inst = null;
@@ -116,6 +125,7 @@ function select(id, push = true) {
 const esc = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const fmt = (p, v) => p.type === 'range' ? `${+(+v).toFixed(3)}${p.unit || ''}` : '';
 function renderParams(e) {
+  if (e.mount && WORKS.includes(e)) { $('params').innerHTML = `<div class="ph"><b>参数</b><span>Params</span></div><p class="pn">画法在画面右上角切换（或按 1–4 键），底部时间轴可以回放。服务器位置、站点、数据源这些在代码里改，见下面的说明。</p>`; return; }
   const v = valsOf(e), ps = e.params || [];
   $('params').innerHTML = `<div class="ph"><b>参数</b><span>Params</span><button type="button" id="preset">恢复默认</button></div>` +
     ps.map(p => `<label class="pr"><span>${p.label}<em>${fmt(p, v[p.k])}</em></span>` + (
@@ -185,7 +195,13 @@ ${(e.params || []).map(p => `  - ${p.k}：${p.label}，默认 ${JSON.stringify(p
   - 最后一段 <script>：把效果挂到 #fx 上并启动
 -->`.replace(/-->(?=[\s\S]*-->$)/g, '->');
 }
+// 作品的代码很大，点到时才加载它的 source.js（普通脚本，file:// 也能加载）
+const workSrc = e => window.MH_WORK_SOURCES?.[e.id] != null ? Promise.resolve(MH_WORK_SOURCES[e.id]) : new Promise((ok, no) => {
+  const s = document.createElement('script'); s.src = e.dir + 'source.js';
+  s.onload = () => ok(MH_WORK_SOURCES[e.id]); s.onerror = () => no(new Error(e.dir + 'source.js')); document.head.append(s);
+});
 async function fullCode(e) {
+  if (WORKS.includes(e)) return workSrc(e);
   const [css, core, file] = await Promise.all([read('src/effects.css'), read('src/core.js'), read('src/effects/' + e.file)]);
   // 带上实验台里调好的参数；多行文字参数写成数组，方便阅读和修改
   const v = valsOf(e), o = Object.fromEntries((e.params || []).map(p => [p.k, p.type === 'lines' ? MH.lines(v[p.k]) : v[p.k]]));
