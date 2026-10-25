@@ -44,6 +44,9 @@ canvas#gl{touch-action:none;cursor:grab;z-index:0}
 canvas#gl.drag{cursor:grabbing}
 canvas#hud{pointer-events:none;z-index:1}
 .mast,.side,.deck,.note,.cap,.card,.colo{z-index:3}
+/* 地图素材还没下完时的一行字：快的话（有缓存）根本不出现，0.6 秒后才淡出来 */
+.boot{position:fixed;inset:50% 0 auto;transform:translateY(-50%);margin:0;text-align:center;font-size:11px;letter-spacing:.3em;color:var(--dim);z-index:4;pointer-events:none;opacity:0;animation:boot-in .8s ease .6s forwards}
+@keyframes boot-in{to{opacity:1}}
 .mast,.side,.deck,.note,.colo{transition:opacity .9s ease}
 .mast>*{transition:opacity .4s ease}
 .intro .mast,.intro .side,.intro .deck,.intro .note,.intro .colo{opacity:0}
@@ -239,4 +242,4 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 @media (max-width:760px) and (max-height:700px){ .from h3.cold,.from ol.cold{display:none} }
 
-@media (prefers-reduced-motion:reduce){ .cap,.cap.on,.card,.mast,.mast>*,.side,.deck,.note,.colo,.styles button,.styles i,body::before,body::after{transition:none;animation:none} .flow li{animation:none} }
+@media (prefers-reduced-motion:reduce){ .boot{animation:none;opacity:1} .cap,.cap.on,.card,.mast,.mast>*,.side,.deck,.note,.colo,.styles button,.styles i,body::before,body::after{transition:none;animation:none} .flow li{animation:none} }
