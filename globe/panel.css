@@ -1,0 +1,259 @@
+/* 面板的数据层：刊头的日子、日历、状态层。只用页面的变量（--ink --dim --faint --line --warm --bad --slow --card-*），
+   画法一换就跟着换；日历的深浅用当前画法直方图的“人”色（--hist-h，globe.js 换画法时写进来）。 */
+:root{--hist-h:243,178,111}
+
+/* 刊头：时钟下面一行是“哪一天 · 此刻/回放”，点开日历；不在此刻时旁边有“回到此刻” */
+.when{margin-top:7px;display:flex;align-items:baseline;gap:14px;pointer-events:auto}
+#when{display:inline-flex;align-items:baseline;gap:9px;padding:2px 0;font-size:12px;letter-spacing:.08em;color:var(--dim);border-bottom:1px dashed var(--faint);transition:color .2s,border-color .2s}
+#when:hover,#when[aria-expanded=true]{color:var(--ink);border-bottom-color:var(--dim)}
+#whenM{color:var(--ink);letter-spacing:.16em}
+#when.live #whenM{color:var(--warm)}
+#when.live #whenM::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:2px;animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.25}}
+#back{font-size:11.5px;letter-spacing:.12em;color:var(--warm);padding:2px 0;border-bottom:1px solid color-mix(in srgb,var(--warm) 45%,transparent)}
+#back:hover{border-bottom-color:var(--warm)}
+#when:focus-visible,#back:focus-visible{outline:1px solid var(--dim);outline-offset:3px}
+.ttl em.demo{font-style:normal;font-size:11px;letter-spacing:.32em;color:var(--bad);padding-left:12px;border-left:1px solid var(--line)}
+.note b.demo{color:var(--bad);font-weight:500;letter-spacing:.2em}
+.note em{font-style:normal;color:var(--bad)}
+.note a{pointer-events:auto;color:inherit;text-decoration:none;border-bottom:1px dotted var(--faint)}
+.note a:hover{color:var(--dim)}
+.spd .now{margin-left:6px;letter-spacing:.1em;font-family:var(--sans)}
+.spd .now.on{color:var(--warm)}
+
+/* 刊头主位：有站停了是页面上最大的一行（红），时钟让到下面变小；都好时一句“7 站都好”；采集数据停了另起一行，琥珀色 */
+.alert{margin-top:14px;max-width:420px}
+.alert:empty{display:none}
+.al-down{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;padding-left:12px;border-left:3px solid var(--bad)}
+.al-down b{font:600 32px/1.12 var(--head);color:var(--bad);letter-spacing:.03em}
+.al-down span{font-size:13px;color:var(--bad);letter-spacing:.06em}
+.al-why{margin-top:5px;padding-left:15px;font-size:11.5px;color:var(--dim);letter-spacing:.04em}
+.al-why.past{padding-left:13px}
+.al-ok{display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.1em;color:var(--ok)}
+.al-ok i{flex:none;width:6px;height:6px;border-radius:50%;background:currentColor}
+.al-ok span{color:var(--dim)}
+.al-ok .warn{color:var(--slow)}
+.al-ok.past{color:var(--dim)}
+.al-past{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 12px;padding-left:11px;border-left:2px solid var(--bad)}
+.al-past b{font:600 19px/1.2 var(--head);color:var(--bad);letter-spacing:.04em}
+.al-past span{font-size:12px;color:var(--dim)}
+.al-stale{margin-top:8px;padding-left:11px;border-left:2px solid var(--slow);font-size:11.5px;color:var(--slow);letter-spacing:.04em}
+.al-now{margin-top:8px;font-size:11.5px;color:var(--dim);letter-spacing:.04em}
+.al-now em{font-style:normal;color:var(--warm);letter-spacing:.24em;margin-right:8px}
+.mast.alarm .clock{margin-top:12px;font-size:20px;color:var(--dim)}
+/* 回放：时钟前面是那天的日期（冷色），整只钟淡下来、底下一道虚线；和此刻那只墨色的钟一眼分得开 */
+.mast.past .clock{display:inline-block;padding-bottom:4px;border-bottom:1px dashed var(--cold-b);color:var(--dim)}
+.clock .cd{color:var(--cold-b);margin-right:.32em}
+
+/* 状态层：右栏最上面。层级：标题行 → 停了的站（大字、红、原因）或一句“都好” → 其余的站一行一个（小字）→ tc 主机。
+   回放时整层换成那一天，最底下单独一段「此刻」 */
+.board{pointer-events:auto;flex:none}
+.board .bsum,.board .bx{display:none}
+.board .bad{color:var(--bad)}
+.board .warn{color:var(--slow)}
+.board .bh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);margin-bottom:9px}
+.side .board .bh h3{border:0;margin:0}
+.board .dep{white-space:nowrap}   /* 依赖一项（名字 + 状态）不在中间折行 */
+.board .pub{display:inline-flex;align-items:center;gap:6px;padding:0 0 8px;font-size:10.5px;letter-spacing:.14em;color:var(--faint);transition:color .2s}
+.board .pub::before{content:"";width:8px;height:8px;border:1px solid currentColor;border-radius:1px}
+.board .pub:hover{color:var(--dim)}
+.board .pub[aria-pressed=true]{color:var(--ink)}
+.board .pub[aria-pressed=true]::before{background:currentColor;box-shadow:inset 0 0 0 1.5px var(--bg)}
+.board .pub:focus-visible{outline:1px solid var(--dim);outline-offset:2px}
+.board .stale{margin:0 0 9px;padding-left:10px;border-left:2px solid var(--slow);font-size:11px;line-height:1.5;color:var(--slow)}
+.bdown li{position:relative;padding:0 0 9px 12px;margin-bottom:4px}
+.bdown li::before{content:"";position:absolute;left:0;top:3px;bottom:9px;width:2px;background:var(--bad)}
+.bdown button{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 10px;width:100%;text-align:left}
+.bdown s{display:none}
+.bdown b{font:600 21px/1.2 var(--head);color:var(--bad);letter-spacing:.03em}
+.bdown .st{font-size:12px;color:var(--bad);font-variant-numeric:tabular-nums}
+.bdown .why{margin-top:1px;font-size:11px;color:var(--dim)}
+.bdown button:focus-visible{outline:1px solid var(--dim);outline-offset:2px}
+.board .bok{margin:0 0 8px;font:500 15px/1.4 var(--head);letter-spacing:.08em;color:var(--ok)}
+.board .bok.meh{color:var(--ink)}
+.board .b5{margin:0 0 8px;padding-left:10px;border-left:2px solid var(--bad);display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.board .b5 b{font:600 15px/1.35 var(--head);color:var(--bad);letter-spacing:.04em}
+.board .b5 span{font-size:11.5px;color:var(--dim)}
+.board .bok span{font:12px var(--sans);color:var(--dim);letter-spacing:.04em}
+.bl li{position:relative}
+.bl li>button,.bl li.hd{display:grid;grid-template-columns:12px 58px 1fr 42px 46px;align-items:baseline;width:100%;text-align:left;padding:2px 0}
+.bl li.hd{font-size:9.5px;letter-spacing:.14em;color:var(--faint);padding:0 0 2px}
+.bl li.hd span:nth-child(n+4){text-align:right}
+.bl.day li.hd span:nth-child(3){text-align:right}
+.bl li>button:hover{background:linear-gradient(90deg,color-mix(in srgb,var(--ink) 5%,transparent),transparent)}
+.bl li>button:focus-visible,.srv>button:focus-visible{outline:1px solid var(--dim);outline-offset:1px}
+.bl s{width:5px;height:5px;border-radius:50%;background:var(--c);transform:translateY(-1px)}
+.bl b{font-size:12px;font-weight:500;white-space:nowrap}
+.bl .st{font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.bl .ce{font-size:10.5px;color:var(--faint);text-align:right;font-variant-numeric:tabular-nums}
+.bl .rq,.bl .pp{font-size:11.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.bl .f5{font-size:11px;color:var(--faint);text-align:right;font-variant-numeric:tabular-nums}
+.bl .f5.on{color:var(--bad)}
+.bl li.slow .st{color:var(--slow)}
+.bl li.fold b{color:var(--ok);font-weight:400}
+.bl li.fold>button{grid-template-columns:12px auto 1fr;column-gap:10px}
+.bl li.fold .st{color:var(--faint)}
+.bl li.fold s{background:var(--ok);opacity:.6}
+.bl li.none .st,.bl li.none .rq{color:var(--faint)}
+.bl.day li.down b{color:var(--bad)}
+.board .more{padding:3px 0 8px 12px;font-size:11px;line-height:1.6;color:var(--dim)}
+.board .more em{font-style:normal}
+.board .more em.bad{color:var(--bad)}
+.board .bhost{margin-top:12px}
+.board h3.hh{margin-top:0}
+.srv>button{display:flex;flex-wrap:wrap;gap:1px 12px;width:100%;text-align:left;padding:2px 0;font-size:11px;color:var(--dim);letter-spacing:.04em}
+.srv>button:hover{color:var(--ink)}
+.srv b{font:400 12px var(--sans);color:var(--ink);letter-spacing:0;font-variant-numeric:tabular-nums}
+.srv b.warn{color:var(--slow)}
+.srv .net{flex-basis:100%}
+.srv .na{color:var(--faint)}
+.hchart{margin-top:6px}
+.hchart svg{display:block;width:100%;height:46px;overflow:visible}
+.hchart path{fill:none;stroke-width:1.3;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.hchart path.cpu{stroke:var(--warm)}
+.hchart path.mem{stroke:var(--cold);opacity:.8}
+.hchart .g line{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}
+.hchart .ax{display:flex;justify-content:space-between;font:10px var(--sans);color:var(--faint);margin-top:2px;font-variant-numeric:tabular-nums}
+.hchart figcaption{font-size:11px;color:var(--dim);margin-top:3px;letter-spacing:.02em}
+.hchart figcaption b{font:400 12px var(--sans);color:var(--ink);font-variant-numeric:tabular-nums}
+.hchart figcaption span{margin-right:4px}
+.hchart figcaption span.mem{margin-left:12px}
+.hchart figcaption span::before{content:"";display:inline-block;width:10px;height:2px;margin-right:4px;vertical-align:3px;background:var(--warm)}
+.hchart figcaption span.mem::before{background:var(--cold)}
+.hchart.na{font-size:11px;color:var(--faint)}
+.bnow{margin-top:12px;padding-top:8px;border-top:1px dashed var(--line)}
+.bnow h4{font:500 10.5px var(--head);letter-spacing:.3em;color:var(--warm);margin-bottom:4px}
+.bnow h4::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:7px;vertical-align:1px}
+.bnow p{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--dim)}
+.bnow .bdots{display:flex;gap:3px}
+.bnow .bdots i{width:5px;height:5px;border-radius:50%;background:var(--c);opacity:.7}
+.bnow .bdots i.down{background:var(--bad);opacity:1}
+.bnow .bdots i.none{opacity:.25}
+
+/* 右栏能在有限高度里自适应：状态层最多占一大半、超出就在自己里面滚；人 / 机器两张榜吃剩下的高度、放不下的行直接截掉；流水贴底 */
+.side .board{flex:0 1 auto;min-height:150px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
+.side .board::-webkit-scrollbar{display:none}
+.side .board.over{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent)}
+.side .from{flex:1 1 auto;min-height:230px;overflow:hidden;display:flex;flex-direction:column}
+.side .from h3{flex:none}
+.side .from ol{position:relative;flex:1 1 0;min-height:0;overflow:hidden}
+.side .from ol.cold{flex-grow:.85}
+.side .flow{flex:none}
+.from ol li:first-child{padding:2px 0 6px}
+.from ol li:first-child .n{font-size:15px}
+.from ol li:first-child .c{font-size:15px}
+.from ol#humans li:nth-child(n+7){display:none}
+.from ol.cold li:nth-child(n+6){display:none}
+.side .from h3.cold{margin-top:14px}
+@media (max-height:1050px) and (min-width:761px){ .flow li:nth-child(n+6){display:none} }
+@media (max-height:900px) and (min-width:761px){
+  .side{gap:16px}
+  .flow li:nth-child(n+5){display:none}
+}
+/* 流水：同源连着来的合成一行，行尾“×N”；名字太长就省略号，状态码和字节不被挤掉 */
+.flow li b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flow li .to,.flow li .m{flex:none}
+.flow li .x{flex:none;font:normal 10.5px var(--sans);color:var(--warm);font-variant-numeric:tabular-nums}
+.flow li:not(.human) .x{color:var(--cold-b)}
+.flow li .x:empty{display:none}
+.flow li.past{animation:none}
+.flow li.bump{animation:bump .7s ease-out}
+@keyframes bump{from{background:color-mix(in srgb,var(--ink) 9%,transparent)}}
+.from li>span:first-child{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.flow .quiet{margin-top:5px;font-size:11px;line-height:1.5;color:var(--dim)}
+
+/* 日历：和下钻卡片同一套底子；一格一天 */
+.cal{position:fixed;left:36px;top:150px;z-index:5;width:316px;overflow-y:auto;scrollbar-width:thin;padding:14px 16px 12px;background:var(--card-bg);border:1px solid var(--card-line);border-radius:var(--card-r);box-shadow:var(--card-shadow);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);user-select:none;animation:calin .25s ease-out}
+.cal[hidden]{display:none}
+@keyframes calin{from{opacity:0;transform:translateY(-4px)}}
+.cal .ch{display:flex;align-items:center;gap:6px;padding-right:22px}
+.cal .ch b{font:600 14px var(--head);letter-spacing:.12em;min-width:7.5em;text-align:center}
+.cal .ch button{width:24px;height:24px;font-size:16px;line-height:22px;color:var(--dim)}
+.cal .ch button:disabled{opacity:.25;cursor:default}
+.cal .ch button:not(:disabled):hover{color:var(--ink)}
+.cal .ch .x{position:absolute;right:8px;top:8px;color:var(--faint)}
+.cal .wk,.cal .gr{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal .wk{margin-top:10px;margin-bottom:3px;font-size:10px;color:var(--faint);text-align:center;letter-spacing:.1em}
+.cal .d{position:relative;display:block;height:40px;padding:3px 0 0 5px;text-align:left;border-radius:calc(var(--card-r) * .5);font:11.5px/1.2 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.cal .d.has{background:rgba(var(--hist-h),var(--a));transition:box-shadow .15s}
+.cal .d.has:hover{box-shadow:inset 0 0 0 1px var(--dim)}
+.cal .d.has:focus-visible{outline:1px solid var(--ink);outline-offset:1px}
+.cal .d.deep .n,.cal .d.deep .lv{color:var(--bg)}
+.cal .d.off{color:var(--faint);opacity:.55}
+.cal .d.fut{opacity:.3}
+.cal .d.pad{visibility:hidden}
+.cal .d.on{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.cal .d.now:not(.on){box-shadow:inset 0 0 0 1px var(--dim)}
+.cal .d .lv{display:block;font:9px/9px var(--sans);letter-spacing:.1em;color:var(--warm);margin-top:-3px}
+.cal .d.now .tk{bottom:2px}   /* 今天那格多一行「此刻」：小色条往下让两像素，字不压条 */
+.cal .d.bad::after{content:"";position:absolute;right:4px;top:4px;width:5px;height:5px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 1.5px var(--card-bg)}
+.cal .tk{position:absolute;left:4px;right:4px;bottom:4px;height:4px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;align-items:end}
+.cal .tk i{height:4px;background:var(--c)}
+.cal .tk i.no{height:1px;background:var(--faint);opacity:.6}
+.cal .info{margin-top:10px;min-height:3.2em;font-size:11px;line-height:1.6;color:var(--dim)}
+.cal .info b{color:var(--ink);font-weight:500}
+.cal .info em{font-style:normal}
+.cal .info em.bad{color:var(--bad)}
+.cal .info .nw{white-space:nowrap}
+.cal .lg{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:grid;gap:4px;font-size:11px;line-height:1.5;color:var(--dim)}
+.cal .lg p{display:flex;align-items:center}
+.cal .lg i{display:inline-block;margin-right:7px}
+.cal .lg i.sw{width:22px;height:8px;background:linear-gradient(90deg,rgba(var(--hist-h),.1),rgba(var(--hist-h),.8))}
+.cal .lg i.rd{width:6px;height:6px;border-radius:50%;background:var(--bad);margin:0 8px 0 8px}
+.cal .lg .lgs{color:var(--faint);font-size:10.5px}
+.cal .lgk{display:grid;grid-template-columns:repeat(4,auto);justify-content:start;gap:2px 12px;font-size:11px;color:var(--ink)}
+.cal .lgk li{display:flex;align-items:center;white-space:nowrap}
+.cal .lgk i{width:10px;height:4px;background:var(--c);margin-right:5px}
+.cal .lgk i.slot{width:24px;background:linear-gradient(to right,transparent calc(var(--k) * 12.5%),var(--ink) calc(var(--k) * 12.5%),var(--ink) calc((var(--k) + 1) * 12.5%),transparent calc((var(--k) + 1) * 12.5%)),var(--line)}
+.cal .fo{margin-top:7px;font-size:10px;color:var(--faint)}
+.cal .fo a{color:var(--dim);text-decoration:none;border-bottom:1px dotted var(--faint)}
+.cal .go-now{color:var(--warm);font-size:11px;letter-spacing:.1em;border-bottom:1px solid color-mix(in srgb,var(--warm) 45%,transparent)}
+
+/* 手机：状态层收成一行（八个色点 + 一句话），点开和日历一样从底下升起一张单子 */
+@media (max-width:760px){
+  .when{margin-top:5px;gap:10px}
+  #when{font-size:11px;gap:7px}
+  #back{font-size:11px}
+  .ttl em.demo{font-size:10px;padding-left:8px;letter-spacing:.2em}
+  .board{position:fixed;left:auto;right:12px;top:62px;width:auto;z-index:4}
+  .board .bsum{display:flex;flex-direction:column;align-items:flex-end;gap:3px;padding:4px 2px;font-size:10.5px;color:var(--dim);text-align:right}
+  .board .bsum .bsv{display:none}
+  .deck .note{display:none}
+  .spd button[data-s="60"]{display:none}
+  .bdots{display:flex;gap:4px}
+  .bdots i{width:6px;height:6px;border-radius:50%;background:var(--c);opacity:.75}
+  .bdots i.down{background:var(--bad);opacity:1;box-shadow:0 0 0 2px color-mix(in srgb,var(--bad) 30%,transparent)}
+  .bdots i.none{opacity:.3}
+  .board .bbody{display:none}
+  .board.open .bbody{display:block;position:fixed;left:0;right:0;bottom:0;max-height:76vh;overflow:auto;padding:16px 18px calc(16px + env(safe-area-inset-bottom));background:var(--card-bg);border-top:1px solid var(--card-line);border-radius:var(--card-r) var(--card-r) 0 0;box-shadow:var(--card-shadow);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:sheetin .28s ease-out}
+  .bl li>button,.bl li.hd{grid-template-columns:14px 64px 1fr 46px 52px;padding:5px 0}
+  .board .bh{padding-right:38px}
+  .side .board{max-height:none;overflow:visible}
+  .board.open .bbody{overscroll-behavior:contain}
+  .bdown b{font-size:19px}
+  .from ol#humans li:nth-child(n+5){display:none}
+  .from ol li:first-child .n,.from ol li:first-child .c{font-size:12.5px}
+  .from ol li:first-child{padding:1px 0 2px}
+  .side .from,.side .flow{flex:1 1 0;min-width:0;min-height:0}
+  .side{padding-top:8px;background:linear-gradient(to bottom,rgba(var(--shade),0),rgba(var(--shade),.9) 8px);box-shadow:0 120px 0 rgba(var(--shade),.9)}
+  .al-stale span,.board .stale span{display:none}
+  .flow li:nth-child(n+6){display:none}
+  .flow .quiet{font-size:10px;margin-top:3px}
+  .cap{top:auto!important;bottom:calc(270px + env(safe-area-inset-bottom));padding:6px 10px;background:color-mix(in srgb,var(--bg) 82%,transparent);border-radius:2px}
+  .alert{margin-top:8px;max-width:none;padding-right:96px}
+  .al-down b{font-size:22px}
+  .al-down span{font-size:11.5px}
+  .al-why{font-size:10.5px;margin-top:3px}
+  .al-ok{font-size:11.5px}
+  .al-past b{font-size:15px}
+  .al-stale,.al-now{font-size:10.5px;margin-top:5px}
+  .mast.alarm .clock{font-size:15px;margin-top:6px}
+  .mast.past .clock{padding-bottom:2px}
+  .cal{left:0;right:0;bottom:0;top:auto!important;width:auto;max-height:82vh;overflow:auto;padding:16px 16px calc(14px + env(safe-area-inset-bottom));border-radius:var(--card-r) var(--card-r) 0 0;border-width:1px 0 0;z-index:6;animation:sheetin .28s ease-out}
+  .cal .d{height:44px}
+  body.calopen .deck,body.sheet .deck,body.calopen .cap,body.sheet .cap{opacity:0!important;pointer-events:none}
+  body.sheet .side{z-index:6}
+  .board .bx{display:block;position:absolute;right:10px;top:8px;width:28px;height:28px;font-size:18px;color:var(--faint)}
+}
+@keyframes sheetin{from{transform:translateY(24px);opacity:0}}
+@media (prefers-reduced-motion:reduce){ #when.live #whenM::before{animation:none} .cal,.board.open .bbody{animation:none} }

@@ -73,6 +73,8 @@
 <script>
 const $ = id => document.getElementById(id);
 const CATS = ['背景', '过渡', '翻页', '片头', '交互'];
+// 作品：整页的独立作品，不在舞台上跑，点了打开它自己的页面（globe/ 由 tc-console 的 tools/globe/export-hub.mjs 导出）
+const WORKS = [{ name: '服务器监控地球', href: 'globe/index.html', desc: '按真实昼夜转动的地球，访问画成飞向服务器的弧线；深空、铜版、白昼、水墨四种画法，演示数据' }];
 // 分类的英文名，显示成小字
 const CAT_EN = { 背景: 'Backgrounds', 过渡: 'Theme Transitions', 翻页: 'Page Turn', 片头: 'Intro', 交互: 'Interactions' };
 // 每个效果需要 effects.css 里的哪几段样式（base 总是带上）
@@ -85,7 +87,7 @@ $('count').textContent = `${list.length} 个效果 · ${CATS.length} 类`;
 $('list').innerHTML = CATS.map(c => {
   const items = list.filter(e => e.cat === c);
   return `<h2>${c}<em>${CAT_EN[c]}</em><span>${items.length}</span></h2>` + items.map((e, i) => `<button type="button" data-id="${e.id}"><i>${String(i + 1).padStart(2, '0')}</i>${e.name}</button>`).join('');
-}).join('');
+}).join('') + `<h2>作品<em>Works</em><span>${WORKS.length}</span></h2>` + WORKS.map((w, i) => `<a class="work" href="${w.href}" title="${w.desc}"><i>${String(i + 1).padStart(2, '0')}</i>${w.name}<b aria-hidden="true">↗</b></a>`).join('');
 
 // 舞台：同一时间只运行一个效果；切换时销毁旧的
 let cur = null, inst = null;

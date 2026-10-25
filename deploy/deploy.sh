@@ -11,7 +11,7 @@ npm run -s skill
 git diff --quiet -- skills/ && [ -z "$(git ls-files --others --exclude-standard skills/)" ] || echo "⚠ skills/ 有变化，记得提交"
 rm -f skills/motion-hub.zip && (cd skills && zip -qr motion-hub.zip motion-hub)
 DEST=/www/wwwroot/motion.lijunyu.com.cn
-rsync -az --delete --include='/index.html' --include='/favicon.svg' --include='/robots.txt' --include='/LICENSE' --include='/src/***' --exclude='*' ./ tc:$DEST/
+rsync -az --delete --include='/index.html' --include='/favicon.svg' --include='/robots.txt' --include='/LICENSE' --include='/src/***' --include='/globe/***' --exclude='*' ./ tc:$DEST/
 # Skill：仓库里在 skills/，网站上的地址是 /skill/（已安装的 Skill 写死了这个地址，不能改）
 ssh tc "mkdir -p $DEST/skill"
 rsync -az --delete skills/motion-hub/ tc:$DEST/skill/motion-hub/
