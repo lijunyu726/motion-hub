@@ -52,7 +52,7 @@
 
 ## 作品（`globe/`）
 
-- 名单最下面的「作品」板块（`index.html` 的 `WORKS`）放整页的完整作品，不走 `MH.register`：点到时舞台里用 iframe 打开它自己的 `index.html`（页面在 iframe 里会藏起“← Motion Hub”回链），参数区只放一段说明；“复制 Prompt + 代码”的内容在作品目录的 `source.js`（定义 `MH_WORK_SOURCES[id]`），点到时才用 `<script>` 加载，不进 `src/sources.js`。作品不进 Skill。
+- 名单最下面的「作品」板块（`index.html` 的 `WORKS`）放整页的完整作品，不走 `MH.register`：点到时舞台里用 iframe 打开它自己的 `index.html`（页面在 iframe 里会藏起“← Motion Hub”回链），参数区只放一段说明，操作区多一个「↗ 单独打开」在新标签页打开整页；“复制 Prompt + 代码”的内容在作品目录的 `source.js`（定义 `MH_WORK_SOURCES[id]`），点到时才用 `<script>` 加载，不进 `src/sources.js`。作品不进 Skill。
 - `globe/` 整个目录由面板项目生成：在 `/Volumes/S690/codes/tc-console` 运行 `node tools/globe/export-hub.mjs`（默认输出到本仓库的 `globe/`），不要手改，改了面板再导出一次。它把面板前端用 esbuild 打成一个 ES 模块内联进 `index.html`（file:// 不拦内联模块），地图素材 gzip + base64 写进 `assets.js`（约 4 MB）并定义 `TC_EMBED`，面板看到它就只用合成的演示数据、不发请求；另外生成 `source.js`：开头是给 AI 的提示词、样式内联、模块不压缩的单文件，素材太大不放进去，要和 `assets.js` 放一起才能运行。
 - 和其他效果一样是给人拿去用的：不能出现作者自己的域名、服务商、产品（导出脚本会换成通用站名并检查，见 tc-console 的 AGENTS.md）。
 - 只放面板正在用的四种画法（深空、铜版、白昼、水墨），2026-10-25 作者定的；页面配色是面板自己的，不用本站的配色变量。

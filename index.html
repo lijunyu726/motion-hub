@@ -59,7 +59,7 @@
         <h1 id="name"></h1>
         <p id="desc"></p>
         <div class="tech" id="tech"></div>
-        <div class="act"><button id="reset" type="button">↻ 重置</button><button id="full" type="button">⛶ 全屏</button></div>
+        <div class="act"><button id="reset" type="button">↻ 重置</button><button id="full" type="button">⛶ 全屏</button><a id="open" target="_blank" rel="noopener" hidden>↗ 单独打开</a></div>
       </div>
       <div class="params" id="params" aria-label="参数"></div>
       <div class="use"><pre id="use"></pre><div class="copies"><button class="copy p" id="copy" type="button">复制 Prompt + 代码</button></div></div>
@@ -118,6 +118,8 @@ function select(id, push = true) {
   document.querySelectorAll('#list button').forEach(b => b.classList.toggle('on', b.dataset.id === e.id));
   document.querySelector(`#list button[data-id="${e.id}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest' });
   $('cat').textContent = `${e.cat} · ${CAT_EN[e.cat]}`; $('name').textContent = e.name; $('desc').textContent = e.desc; $('tech').textContent = e.tech;
+  // 作品在舞台里会挤，给一个新标签页打开整页的入口
+  const work = WORKS.includes(e); $('open').hidden = !work; if (work) $('open').href = e.dir + 'index.html';
   showCode(e);
   if (push && location.hash !== '#' + e.id) history.replaceState(null, '', '#' + e.id);
 }
