@@ -71,12 +71,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hostip span{font-size:10.5px;letter-spacing:.1em;color:var(--dim)}
 .clock{margin-top:16px;font:300 30px/1.1 var(--mono);letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .clock small{font:400 12px var(--sans);color:var(--dim);letter-spacing:.12em;margin-left:10px}
-.tally{margin-top:18px;display:flex;gap:18px;font-size:11px;color:var(--faint);letter-spacing:.08em}
+.tally{margin-top:18px;font-size:11px;color:var(--faint);letter-spacing:.08em}
 .tally span+span::before{content:"·";margin-right:18px;color:var(--faint)}
 .tally b{font:400 13px var(--mono);margin-right:5px;letter-spacing:0;font-variant-numeric:tabular-nums}
 .tally .h b{color:var(--warm)}
 .tally .m b{color:var(--cold-b)}
 .tally .x b{color:var(--bad-b)}
+.tally p{display:flex;gap:18px}
+.tally p+p{margin-top:6px}   /* 第二行：网站拦下、SSH 拦下 */
 .legend{margin-top:12px;font-size:10.5px;color:var(--dim);letter-spacing:.08em}
 .legend:empty{display:none}
 .legend span{display:flex;align-items:center;gap:8px;margin-top:4px}
@@ -192,7 +194,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   .ttl span{font-size:10px;letter-spacing:.1em}
   .clock{font-size:21px;margin-top:8px}
   .clock small{display:none}
-  .tally{margin-top:10px;gap:10px;font-size:10px}
+  .tally{margin-top:10px;font-size:10px}
+  .tally p{gap:10px}
+  .tally p+p{margin-top:4px}
   .tally span+span::before{margin-right:10px}
   .tally b{font-size:12px;margin-right:3px}
   .legend{margin-top:8px}
