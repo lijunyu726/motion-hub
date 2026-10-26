@@ -63,6 +63,8 @@
 .board .stale{margin:0 0 9px;padding-left:10px;border-left:2px solid var(--slow);font-size:11px;line-height:1.5;color:var(--slow)}
 .bl li{position:relative}
 .bl li>button,.bl li.hd{display:grid;grid-template-columns:12px 58px 1fr 42px 46px;align-items:baseline;width:100%;text-align:left;padding:2px 0}
+.bl:not(.day) li>button,.bl:not(.day) li.hd{grid-template-columns:12px 58px 1fr 40px 34px 42px}   /* 此刻：状态、证书、真人、今日 */
+.bl:not(.day) li.down .st{grid-column:3 / span 2}.bl:not(.day) li.down .ce{display:none}   /* 停站的“已经停了 N 小时 M 分”占掉证书那格（证书天数在点开的详情里） */
 .bl li.hd{font-size:9.5px;letter-spacing:.14em;color:var(--faint);padding:0 0 2px}
 .bl li.hd span:nth-child(n+4){text-align:right}
 .bl.day li.hd span:nth-child(3){text-align:right}
@@ -117,8 +119,6 @@ body.swap .rig{opacity:0!important;transition-duration:.28s}
 .rig .rh h3{flex:1;font:500 11px var(--head);letter-spacing:.24em;color:var(--dim)}
 .rig .rh h3 span{margin-left:10px;font:400 10px var(--sans);letter-spacing:.08em;color:var(--warm)}
 .rig .pub,.rig .rx,.rig .rip{display:none}
-.rig.flash .mts{animation:rigflash 1.4s ease-out}
-@keyframes rigflash{0%{opacity:.35}100%{opacity:1}}
 /* 一行一项：名字、大数字、今天的小曲线；下面一行峰值、均值 */
 .rig .mt{display:grid;grid-template-columns:36px 88px 1fr;align-items:center;column-gap:10px;padding:9px 0 8px;border-bottom:1px solid var(--line)}
 .rig .mt>i{font-style:normal;font-size:10.5px;letter-spacing:.2em;color:var(--dim)}
