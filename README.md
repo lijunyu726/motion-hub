@@ -131,7 +131,7 @@ node tools/smoke.mjs --night --mobile
 用 [skills](https://github.com/vercel-labs/skills) 安装（需要 Node.js 18+），可以选装到哪些 Agent、装在项目里还是全局：
 
 ```bash
-npx skills add lijunyu726/motion-hub                                # 交互式选择 Agent 和安装范围
+npx skills add lijunyu726/motion-hub -g                             # 装到用户级（所有项目可用），交互式选择 Agent
 npx skills add lijunyu726/motion-hub -g -a claude-code -a codex -y  # 直接全局装到指定 Agent
 npx skills update                                                   # 以后更新
 ```
