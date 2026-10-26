@@ -108,7 +108,7 @@
 .board .bhost:hover b{text-decoration:underline;text-decoration-color:var(--faint);text-underline-offset:3px}
 .board .bhost:focus-visible{outline:1px solid var(--dim);outline-offset:2px}
 
-/* 左栏：这台服务器。刊头下面一直摆着（top 由 globe.js 按刊头下沿设），放不下时 rig.js 从下往上收，不滚动 */
+/* 左栏：这台服务器。刊头下面一直摆着（top 由 globe.js 按刊头下沿设），放不下时上下滚（rig.js 的 fit 加 .scroll） */
 .rig{position:fixed;left:36px;top:300px;bottom:112px;width:300px;z-index:3;overflow:hidden;user-select:none;transition:opacity .9s}
 .intro .rig{opacity:0}
 body.swap .rig{opacity:0!important;transition-duration:.28s}
@@ -161,7 +161,8 @@ body.swap .rig{opacity:0!important;transition-duration:.28s}
 .rig .po b{font:500 12.5px var(--mono);color:var(--ink)}
 .rig .po .none{background:none;box-shadow:none;padding:0}
 .rig.scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;padding-right:6px}
-.rig.scroll{-webkit-mask-image:linear-gradient(transparent,#000 16px,#000 calc(100% - 16px),transparent);mask-image:linear-gradient(transparent,#000 16px,#000 calc(100% - 16px),transparent)}   /* 滚动时上下边缘渐隐，切了一半的行不贴着刊头 */
+.rig.scroll{--mt:#000;--mb:#000;-webkit-mask-image:linear-gradient(var(--mt),#000 16px,#000 calc(100% - 16px),var(--mb));mask-image:linear-gradient(var(--mt),#000 16px,#000 calc(100% - 16px),var(--mb))}   /* 能往哪头滚，哪头边缘渐隐 */
+.rig.scroll.up{--mt:transparent}.rig.scroll.dn{--mb:transparent}
 .rig .pgs{display:flex;gap:18px;margin-top:7px;font-size:11px;color:var(--dim)}
 .rig .pg b{font:400 12px var(--mono);color:var(--ink);margin-left:2px}
 .rig button.pg{color:var(--dim);transition:color .2s}
