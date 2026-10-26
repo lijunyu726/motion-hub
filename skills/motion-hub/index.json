@@ -1,9 +1,9 @@
 {
   "name": "motion-hub",
-  "version": "23-201dee1b01",
+  "version": "24-a4de258d2a",
   "base": "https://motion.lijunyu.com.cn/skill/motion-hub/",
   "preview": "https://motion.lijunyu.com.cn",
-  "count": 23,
+  "count": 24,
   "effects": [
     {
       "id": "contour",
@@ -252,7 +252,7 @@
       ],
       "file": "effects/theme-circle.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-circle.html",
-      "sha256": "6fcff6e142727a372076ae1a80d815f82eec1fd7f2d044299c28f4c22cadfcae"
+      "sha256": "9aeeeb924ce683034c90e3e03c9e3b06fe4affe8255fc0e3225911a7f38792b4"
     },
     {
       "id": "theme-ink",
@@ -274,7 +274,29 @@
       ],
       "file": "effects/theme-ink.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-ink.html",
-      "sha256": "f2bae62408b101d0d59cb8cdf3c3983090cd56fb9b070adb75adcc88f9f7ac24"
+      "sha256": "2d0a8645a89ec241db20cf57c66f94a3f58be86033a3e7b520b3ed8e5ec36822"
+    },
+    {
+      "id": "theme-sumi",
+      "name": "水墨晕开",
+      "cat": "过渡",
+      "catEn": "Theme Transitions",
+      "tech": "View Transitions API · SVG Mask · 值噪声",
+      "desc": "一圈淡墨从点击处漾开：边缘随噪声缓缓起伏、柔和羽化，带一道强调色细缝，像水墨在宣纸上化开。 点画面任意位置触发。",
+      "params": [
+        {
+          "k": "dur",
+          "label": "时长",
+          "type": "range",
+          "def": 1600,
+          "min": 200,
+          "max": 2400,
+          "unit": "ms"
+        }
+      ],
+      "file": "effects/theme-sumi.html",
+      "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-sumi.html",
+      "sha256": "cb465d023c07134fe07ebc3ac24857412d17d4f0aee4c0dcb6bbc28408c9a86a"
     },
     {
       "id": "theme-dots",
@@ -296,7 +318,7 @@
       ],
       "file": "effects/theme-dots.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-dots.html",
-      "sha256": "54d27abbde70a80f7739420241add8664c5273019adcb5198e012750faccc775"
+      "sha256": "c951969b3e8ec6d8124648c5b718dfdfb3a3e52a3f0dfeadb7f0fedae38fa6d1"
     },
     {
       "id": "theme-blinds",
@@ -318,7 +340,7 @@
       ],
       "file": "effects/theme-blinds.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-blinds.html",
-      "sha256": "a0f761e4828eb48f8877ff9ee2dc149f7abdcfa21206429d432ebee0e03a3490"
+      "sha256": "e1e47b56b8573313254979a0b9345b06a8d2d4858c80b013d9244864ce0a5d80"
     },
     {
       "id": "theme-slice",
@@ -340,7 +362,7 @@
       ],
       "file": "effects/theme-slice.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-slice.html",
-      "sha256": "04c83093866e8674b381c1c613a081c20a34225f884609dba351fff7dd884064"
+      "sha256": "e4568a4d850cd3a952bc35646de6087c18cadd16172be4b1e6f092c9a42c268c"
     },
     {
       "id": "theme-iris",
@@ -362,7 +384,7 @@
       ],
       "file": "effects/theme-iris.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-iris.html",
-      "sha256": "6e5f8c92b3499dbb5e665a290ab444bb0a59858b75e91157947c10d48a938092"
+      "sha256": "9eba11ef885886a14374ee8424c8843565792972dec521f0f117dc792a30a9c8"
     },
     {
       "id": "theme-wave",
@@ -384,7 +406,7 @@
       ],
       "file": "effects/theme-wave.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-wave.html",
-      "sha256": "c62a9f9f93c990682a5b585a7e309448508a2e8a2b1eecd04576825a9f90f386"
+      "sha256": "2298b7ddbe946b29392d682c0b3a5e80937e7aec4b188638e98a5ac68ab980ec"
     },
     {
       "id": "theme-halftone",
@@ -406,7 +428,7 @@
       ],
       "file": "effects/theme-halftone.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-halftone.html",
-      "sha256": "d541687cfde2e720f60f07d47c0f556c014c8606c7959f5477022f22ce34d997"
+      "sha256": "d4febd3e1060e94ac2f51ac4bd5f5f9f26148cb382022e136839e1837c6751ac"
     },
     {
       "id": "theme-soft",
@@ -428,7 +450,7 @@
       ],
       "file": "effects/theme-soft.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-soft.html",
-      "sha256": "5107c98f9dd4ce7cbc3c335be323f751132387b0f3cdb02377c7fffe4a729af2"
+      "sha256": "ba4cce8f99d2f8c08ce7dfe07294ef467228a39413c2cdbcbc5a5fdead1b81b6"
     },
     {
       "id": "theme-flip",
@@ -450,7 +472,7 @@
       ],
       "file": "effects/theme-flip.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-flip.html",
-      "sha256": "0eef9b41cb5c76dbe08cfe921de9127453047465b93fd828d417193028f5540b"
+      "sha256": "38672c93c176be5db62603e2caf0663f0cf87733dc13d9179055cc531aba7bfb"
     },
     {
       "id": "theme-fade",
@@ -472,7 +494,7 @@
       ],
       "file": "effects/theme-fade.html",
       "url": "https://motion.lijunyu.com.cn/skill/motion-hub/effects/theme-fade.html",
-      "sha256": "67d42bbc7454bbbe056291cfac72aa5c17039421c059a1611c77a5f669672bb8"
+      "sha256": "79031e3419e22fac6a4c463eeed880d38a82a160d9ca20d23e978b620f73f2b3"
     },
     {
       "id": "pull",

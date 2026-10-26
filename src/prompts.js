@@ -125,6 +125,7 @@ window.MH_PROMPTS = (() => {
   const TT = {
     circle: 'clip-path: circle()，半径从 0 补间到“触发点到最远角的距离 R”。',
     ink: '96 个点的多边形，每个点半径 = R × k × (0.88 + 三个低频正弦叠加的起伏，相位每次随机)；中间加一个 offset 0.4 的关键帧，形成先快后慢。',
+    sumi: '逐帧重算的 SVG <mask>：180 个方向上，半径 = easeInOut(k) × (R + 3.6F) − F/2 − 起伏 × min(2.4F, 0.22 × 当前半径)，F = 56px 羽化宽；起伏 = 两层值噪声（方向 × 2.6 随时间漂移、方向 × 9 加细碎），遮罩里再做 F/3.6 的高斯模糊让边缘化开；新一层上叠一道 0.34 透明度的强调色细缝；时长 1600ms。整页时 ::view-transition-new(root) 用 mask: url(#mh-sumi)，并挂一个什么都不变的同时长动画撑住过渡。',
     dots: '三层遮罩合成：实心圆（半径 --vr - 160px）∪（18px 网点 ∩ 前沿环），mask-composite: add, intersect（WebKit 写 source-over, source-in）。',
     blinds: 'repeating-linear-gradient 竖条遮罩，每条可见宽度 --vw 从 0 长到周期 72px。',
     slice: '斜边多边形 clip-path，从点击所在的一侧扫向另一侧。',

@@ -13,6 +13,8 @@
         const ring = k => `polygon(${wob.map((w, i) => { const a = i / N * Math.PI * 2, r = R * k * (k < 1 ? w : 1.3); return `${(x + Math.cos(a) * r).toFixed(1)}px ${(y + Math.sin(a) * r).toFixed(1)}px`; }).join(',')})`;
         return [{ clipPath: ring(0) }, { clipPath: ring(.45), offset: .4 }, { clipPath: ring(1.25) }];
       } },
+    // 水墨晕开不用关键帧：每帧按噪声重算轮廓，写进 SVG <mask>（见下面的 sumiRing / sumiMask）
+    sumi: { name: '水墨晕开', dur: 1600, desc: '一圈淡墨从点击处漾开：边缘随噪声缓缓起伏、柔和羽化，带一道强调色细缝，像水墨在宣纸上化开。', shape: null },
     dots: { name: '点阵扩散', dur: 1000, desc: '前沿是一圈网点，后面才是实心，适合配点阵背景。',
       shape: (x, y, R, W, H, s) => [{ '--vr': '0px' }, { '--vr': `${R + 180 * s}px` }] },
     blinds: { name: '百叶窗', dur: 700, desc: '一条条竖帘同时翻开，利落、有节奏。',
@@ -41,6 +43,52 @@
     fade: { name: '淡入淡出', dur: 400, desc: '最普通的渐变，作对照。', shape: () => [{ opacity: 0 }, { opacity: 1 }] },
   };
   const EASE = 'cubic-bezier(.6,0,.2,1)';
+
+  // ───── 水墨晕开 ─────
+  // 每个方向的半径 = 当前半径 − 羽化宽/2 − 起伏；起伏 = 低频值噪声（方向 × 2.6，随时间漂移）+ 高频（方向 × 9）× 0.4，
+  // 幅度最多 ±2.4 倍羽化宽，但不超过当前半径的 0.22（刚洇开时半径小，按全额会把好几个方向压回圆心、成了尖角星形）。
+  // 轮廓 180 个点，过相邻点的中点用二次曲线连；羽化交给遮罩里的高斯模糊。
+  const h2 = (x, y) => { const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return v - Math.floor(v); };
+  const n2 = (x, y) => {
+    const ix = Math.floor(x), iy = Math.floor(y); let fx = x - ix, fy = y - iy;
+    fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
+    const a = h2(ix, iy), b = h2(ix + 1, iy), c = h2(ix, iy + 1), d = h2(ix + 1, iy + 1);
+    return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
+  };
+  const easeIO = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  const SUMI_N = 180;
+  const sumiRing = (x, y, R, F) => {
+    const far = R + F * 3.6, sx = Math.random() * 50, sy = Math.random() * 50;
+    return (k, t) => {
+      const r = easeIO(k) * far, amp = Math.min(F * 2.4, r * .22), pts = [];
+      for (let i = 0; i < SUMI_N; i++) {
+        const a = i / SUMI_N * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a);
+        const wob = (n2(dx * 2.6 + 1.7 + sx, dy * 2.6 + t * .3 + sy) - .5) * 2 + (n2(dx * 9 + 4.1 + sy, dy * 9 + 4.1 + sx) - .5) * .8;
+        const rr = Math.max(0, r - F / 2 - wob * amp);
+        pts.push([x + dx * rr, y + dy * rr]);
+      }
+      const mid = i => { const [ax, ay] = pts[i % SUMI_N], [bx, by] = pts[(i + 1) % SUMI_N]; return `${((ax + bx) / 2).toFixed(1)} ${((ay + by) / 2).toFixed(1)}`; };
+      return `M${mid(SUMI_N - 1)}` + pts.map((p, i) => `Q${p[0].toFixed(1)} ${p[1].toFixed(1)} ${mid(i)}`).join('') + 'Z';
+    };
+  };
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const svgEl = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  let sumiUid = 0;
+  // 遮罩：白色 = 露出新的一层。返回 { el: 要插进页面的 <svg>, id, path }
+  const sumiMask = (W, H, F) => {
+    const id = 'mh-sumi-' + ++sumiUid, el = svgEl('svg', { width: 0, height: 0, 'aria-hidden': 'true' });
+    el.style.cssText = 'position:absolute;left:0;top:0';
+    const defs = svgEl('defs', {}, el), m = svgEl('mask', { id, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H }, defs);
+    const blur = svgEl('filter', { id: id + '-b', filterUnits: 'userSpaceOnUse', x: -F, y: -F, width: W + 2 * F, height: H + 2 * F }, defs);
+    svgEl('feGaussianBlur', { stdDeviation: (F / 3.6).toFixed(1) }, blur);
+    return { el, id, path: svgEl('path', { fill: '#fff', filter: `url(#${id}-b)`, d: '' }, m) };
+  };
+  // 细缝：画在新的一层上的一道强调色描边，跟着遮罩一起淡掉一半
+  const sumiSeam = (W, H, F) => {
+    const el = svgEl('svg', { width: W, height: H, 'aria-hidden': 'true' });
+    el.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;overflow:visible';
+    return { el, path: svgEl('path', { fill: 'none', stroke: 'var(--accent)', 'stroke-width': (F / 20).toFixed(1), 'stroke-opacity': .34, d: '' }, el) };
+  };
   // 遮罩里用到的尺寸（随缩放系数变）：点阵前沿宽度、网点格子、柔光边宽、百叶窗周期
   const sizeVars = (el, s) => {
     el.style.setProperty('--band', `${160 * s}px`); el.style.setProperty('--tile', `${18 * s}px`);
@@ -75,6 +123,21 @@
         };
         if (MH.still()) return settle();
         const quiet = () => {}; // 被打断时动画会被 cancel，finished 会 reject，忽略即可
+        if (id === 'sumi') {
+          const F = 56 * s, ring = sumiRing(x, y, R, F), mk = sumiMask(W, H, F), sm = sumiSeam(W, H, F);
+          box.appendChild(mk.el); top.appendChild(sm.el);
+          top.style.webkitMask = top.style.mask = `url(#${mk.id})`;
+          let raf = 0; const t0 = performance.now();
+          const stop = () => { cancelAnimationFrame(raf); mk.el.remove(); sm.el.remove(); top.style.webkitMask = top.style.mask = ''; };
+          anims.push({ cancel: stop });
+          const frame = now => {
+            const k = Math.min(1, (now - t0) / opts.dur), d = ring(k, now / 1000);
+            mk.path.setAttribute('d', d); sm.path.setAttribute('d', d);
+            if (k < 1) raf = requestAnimationFrame(frame); else settle();
+          };
+          frame(t0);
+          return;
+        }
         if (id === 'flip') {
           const o = { duration: opts.dur / 2, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'both' };
           top.style.visibility = 'hidden';
@@ -106,7 +169,7 @@
     };
   }
   for (const [id, fx] of Object.entries(FX)) {
-    MH.register({ id: `theme-${id}`, name: fx.name, cat: '过渡', tech: 'View Transitions API · ' + (id === 'flip' ? 'WAAPI · 3D Transform' : (/dots|blinds|halftone|soft/.test(id) ? 'CSS Mask · @property' : 'WAAPI · clip-path')), desc: fx.desc + ' 点画面任意位置触发。',
+    MH.register({ id: `theme-${id}`, name: fx.name, cat: '过渡', tech: 'View Transitions API · ' + (id === 'sumi' ? 'SVG Mask · 值噪声' : id === 'flip' ? 'WAAPI · 3D Transform' : (/dots|blinds|halftone|soft/.test(id) ? 'CSS Mask · @property' : 'WAAPI · clip-path')), desc: fx.desc + ' 点画面任意位置触发。',
       params: [{ k: 'dur', label: '时长', type: 'range', min: 200, max: 2400, step: 50, def: fx.dur, unit: 'ms' }], mount: mountTransition(id) });
   }
 
@@ -124,6 +187,7 @@
     const W = innerWidth, H = innerHeight, R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y)), s = 1;
     root.dataset.vfx = id; sizeVars(root, s);
     root.style.setProperty('--vx', x + 'px'); root.style.setProperty('--vy', y + 'px');
+    if (id === 'sumi') { active = sumiPage(x, y, R, W, H, apply, dur); active.finished.finally(() => { active = null; delete root.dataset.vfx; }); return; }
     const vt = document.startViewTransition(apply); active = vt;
     vt.ready.then(() => {
       if (id === 'flip') {
@@ -137,6 +201,30 @@
     }).catch(() => {});
     vt.finished.finally(() => { if (active === vt) { active = null; delete root.dataset.vfx; } });
   };
+  // 整页的水墨晕开：遮罩挂在 ::view-transition-new(root) 上（CSS 见 effects.css 的 [data-vfx="sumi"]），细缝是新页面上临时加的一层描边。
+  // 过渡要有动画撑着才不会马上结束，所以新快照上挂一个时长相同、什么都不变的动画
+  function sumiPage(x, y, R, W, H, apply, dur) {
+    const root = document.documentElement, F = 56, ring = sumiRing(x, y, R, F), mk = sumiMask(W, H, F);
+    mk.el.id = 'mh-sumi-defs'; mk.el.style.position = 'fixed';
+    mk.el.firstChild.firstChild.id = 'mh-sumi';   // 固定 id，CSS 里写 url(#mh-sumi)
+    mk.path.parentNode.parentNode.querySelector('filter').id = 'mh-sumi-b'; mk.path.setAttribute('filter', 'url(#mh-sumi-b)');
+    document.body.appendChild(mk.el);
+    let seam = null, run = true, t0 = 0;
+    const vt = document.startViewTransition(() => { apply(); seam = sumiSeam(W, H, F); seam.el.style.cssText += ';position:fixed;z-index:2147483647'; document.body.appendChild(seam.el); });
+    const frame = now => {
+      if (!run) return;
+      const k = Math.min(1, (now - t0) / dur), d = ring(k, now / 1000);
+      mk.path.setAttribute('d', d); if (seam) seam.path.setAttribute('d', d);
+      if (k < 1) requestAnimationFrame(frame);
+    };
+    mk.path.setAttribute('d', ring(0, 0));
+    vt.ready.then(() => {
+      t0 = performance.now(); requestAnimationFrame(frame);
+      root.animate([{ opacity: 1 }, { opacity: 1 }], { duration: dur, fill: 'forwards', pseudoElement: '::view-transition-new(root)' });
+    }).catch(() => {});
+    vt.finished.finally(() => { run = false; mk.el.remove(); seam && seam.el.remove(); });
+    return vt;
+  }
   // 绑定深浅开关（过渡播完之前再点不生效）
   MH.bindThemeToggle = (btn, apply, id = 'dots', o = {}) => btn.addEventListener('click', e => MH.themeSwitch(e, apply, id, o));
   MH.themeFx = Object.keys(FX);

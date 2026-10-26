@@ -5,20 +5,21 @@ description: 网页动效合集（Motion Hub，持续更新）。用户想给网
 
 # Motion Hub 网页动效
 
-每个效果是一个独立的 `.html` 文件：开头的注释是说明（效果、实现原理、可调参数、注意事项、代码结构），后面是能直接运行的代码。效果会持续增加，**最新的目录和代码在作者的服务器上**；这个 Skill 里也自带一份打包时的副本（版本 `23-201dee1b01`，23 个效果），连不上网时用。在线预览：https://motion.lijunyu.com.cn
+每个效果是一个独立的 `.html` 文件：开头的注释是说明（效果、实现原理、可调参数、注意事项、代码结构），后面是能直接运行的代码。效果会持续增加，**最新的目录和代码在作者的服务器上**；这个 Skill 里也自带一份打包时的副本（版本 `24-a4de258d2a`，24 个效果），连不上网时用。在线预览：https://motion.lijunyu.com.cn
 
 ## 怎么用
 
 1. **取最新目录（在线优先）**：运行
    `curl -fsSL --max-time 10 https://motion.lijunyu.com.cn/skill/motion-hub/index.json`
    - 成功：用它作为效果目录（可能比下面的索引多出新效果），记下它的 `version`。
+   - Windows：PowerShell 里 `curl` 可能是 `Invoke-WebRequest` 的别名，不认这些参数，要写成 `curl.exe`（Windows 10 起自带）。
    - 失败（没有网络、不能运行命令）：改用和本文件同目录的 `index.json`，或下面的“效果索引”，并告诉用户用的是离线副本。
 2. **挑效果**：根据用户的描述，在目录里选一个或几个（看 `name` / `cat` / `desc` / `tech`）。拿不准时把候选的名字和一句话说明给用户看，或者请用户去在线预览页对比。
 3. **取效果文件**：
    - 在线目录的 `version` 和本地 `index.json` 相同，或者在线目录取不到：直接读本地的 `effects/<id>.html`。
    - 否则下载在线版本，**用命令行原样下载**，再读本地文件：
      `curl -fsSL --max-time 20 <该效果的 url> -o <临时目录>/motion-hub-<id>.html`
-     可以用 `shasum -a 256`（或 `sha256sum`）核对和目录里的 `sha256` 一致，不一致就重新下载或改用本地副本。
+     可以用 `shasum -a 256`（或 `sha256sum`；Windows 用 `certutil -hashfile <文件> SHA256`）核对和目录里的 `sha256` 一致，不一致就重新下载或改用本地副本。
    - 不能运行命令、只能用网页抓取工具时：要求它**原样返回完整源码**；如果拿到的是摘要或被截断的代码，改用本地副本，不要凭摘要自己补写。
    - 读文件时先看开头注释里的【实现原理】【注意】【opts 参数】，再看代码。
 4. **放进用户的项目**，按用户的技术栈改写，不要原样塞一个独立 HTML：
@@ -38,7 +39,7 @@ description: 网页动效合集（Motion Hub，持续更新）。用户想给网
 
 MIT + Commons Clause：可以免费用在任何项目里（包括商业项目），可以修改；不能把这些效果本身拿去售卖。作者：LJY（李俊宇），https://lijunyu.com.cn
 
-## 效果索引（打包时的离线副本，版本 `23-201dee1b01`）
+## 效果索引（打包时的离线副本，版本 `24-a4de258d2a`）
 
 在线目录可能有更新的效果，以第 1 步取到的为准。
 
@@ -68,6 +69,9 @@ MIT + Commons Clause：可以免费用在任何项目里（包括商业项目）
 - **墨水晕开**（`theme-ink`，文件 `effects/theme-ink.html`）：从点击处开始，边缘是圆润的不规则形，先快后慢，像墨滴洇开。 点画面任意位置触发。
   - 技术：View Transitions API · WAAPI · clip-path
   - 参数：`dur`（时长，200–2400ms，默认 900）
+- **水墨晕开**（`theme-sumi`，文件 `effects/theme-sumi.html`）：一圈淡墨从点击处漾开：边缘随噪声缓缓起伏、柔和羽化，带一道强调色细缝，像水墨在宣纸上化开。 点画面任意位置触发。
+  - 技术：View Transitions API · SVG Mask · 值噪声
+  - 参数：`dur`（时长，200–2400ms，默认 1600）
 - **点阵扩散**（`theme-dots`，文件 `effects/theme-dots.html`）：前沿是一圈网点，后面才是实心，适合配点阵背景。 点画面任意位置触发。
   - 技术：View Transitions API · CSS Mask · @property
   - 参数：`dur`（时长，200–2400ms，默认 1000）
