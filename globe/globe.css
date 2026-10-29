@@ -1,4 +1,4 @@
-/* 面板样式。这里是深空（v2）的样子；其余七种风格只改变量和少数几处（styles.js 的 cssText，选择器挂在 html[data-style=…] 下） */
+/* 面板样式。这里是深空的样子；水墨只改变量和少数几处（styles.js 的 cssText，选择器挂在 html[data-style=…] 下） */
 :root{
   --bg:#03050a;
   --ink:rgba(228,234,242,.92);
@@ -299,9 +299,9 @@ html.opening .ttl span,html.opening .ttl .out,html.opening .clock,html:is(.locke
 @media (max-width:760px){
   .vault{place-items:start center;padding-top:18vh}
 }
-/* 刚解锁：各块依次浮上来（状态 → 计数 → 左栏 → 右栏 → 时间轴），外圈在 globe.js 里随 unlockT0 淡入 */
+/* 刚解锁：各块依次浮上来（状态 → 计数 → 左栏 → 右栏 → 时间轴） */
 html.unlocking .ttl span,html.unlocking .ttl .out,html.unlocking .clock,html.unlocking .styles,html.unlocking .alert,html.unlocking .when,html.unlocking .tally,html.unlocking .rig,html.unlocking .side,html.unlocking .deck{animation:unl 1.1s cubic-bezier(.2,.7,.2,1) both}
-html.unlocking .alert{animation-delay:.35s}          /* 落地后先停一拍，只有门和外圈亮 */
+html.unlocking .alert{animation-delay:.35s}          /* 落地后先停一拍，只有门亮 */
 html.unlocking .tally{animation-delay:.5s}
 html.unlocking .ttl span,html.unlocking .ttl .out,html.unlocking .clock{animation-delay:.65s}
 html.unlocking .when{animation-delay:.8s}

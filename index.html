@@ -77,7 +77,7 @@ const CATS = ['背景', '过渡', '翻页', '片头', '交互', '作品'];
 // globe/ 由 tc-console 的 tools/globe/export-hub.mjs 导出，不要手改
 const WORKS = [{
   id: 'globe', cat: '作品', name: '服务器监控地球', dir: 'globe/',
-  desc: '一颗按真实昼夜转动的地球，各地来的访问画成飞向服务器的弧线；站点状态、人和机器两张榜、按天回放。右上角切换深空、铜版、白昼、水墨四种画法。演示数据。',
+  desc: '一颗按真实昼夜转动的地球，各地来的访问画成飞向服务器的弧线；站点状态、人和机器两张榜、按天回放。右上角切换深空、水墨两种画法。演示数据。',
   tech: 'WebGL2 · 真实太阳月亮位置 · NASA 地表与夜光 · 着色器换风格',
   mount(el) {
     const f = document.createElement('iframe'); f.className = 'work'; f.src = this.dir + 'index.html'; f.title = this.name;
