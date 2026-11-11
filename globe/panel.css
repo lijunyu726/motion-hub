@@ -172,6 +172,8 @@ body.swap .rig{opacity:0!important;transition-duration:.28s}
 .rig .pl{display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:5px;font-size:10.5px;color:var(--dim)}
 .rig .pl b{font:400 11px var(--mono);color:var(--ink)}
 .rig .pl sup{font:8px var(--mono);color:var(--faint);margin-left:1px}
+.rig .pl em{font-style:normal;color:var(--faint)}
+.rig .pl em.bad,.rig .pg em.bad{font-style:normal;color:var(--bad)}
 /* 最忙的服务：名字、CPU 条、CPU、内存 */
 .rig .busy ol{display:grid;gap:4px}
 .rig .busy li{display:grid;grid-template-columns:100px 1fr 40px 54px;align-items:center;column-gap:8px;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
@@ -241,7 +243,7 @@ body.swap .rig{opacity:0!important;transition-duration:.28s}
 .cal .d .lv{display:block;font:9px/9px var(--sans);letter-spacing:.1em;color:var(--warm);margin-top:-3px}
 .cal .d.now .tk{bottom:2px}   /* 今天那格多一行「此刻」：小色条往下让两像素，字不压条 */
 .cal .d.bad::after{content:"";position:absolute;right:4px;top:4px;width:5px;height:5px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 1.5px var(--card-bg)}
-.cal .tk{position:absolute;left:4px;right:4px;bottom:4px;height:4px;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;align-items:end}
+.cal .tk{position:absolute;left:4px;right:4px;bottom:4px;height:4px;display:grid;grid-template-columns:repeat(var(--n,8),1fr);gap:1px;align-items:end}
 .cal .tk i{height:4px;background:var(--c)}
 .cal .tk i.no{height:1px;background:var(--faint);opacity:.6}
 .cal .info{margin-top:10px;min-height:3.2em;font-size:11px;line-height:1.6;color:var(--dim)}
@@ -258,7 +260,7 @@ body.swap .rig{opacity:0!important;transition-duration:.28s}
 .cal .lgk{display:grid;grid-template-columns:repeat(4,auto);justify-content:start;gap:2px 12px;font-size:11px;color:var(--ink)}
 .cal .lgk li{display:flex;align-items:center;white-space:nowrap}
 .cal .lgk i{width:10px;height:4px;background:var(--c);margin-right:5px}
-.cal .lgk i.slot{width:24px;background:linear-gradient(to right,transparent calc(var(--k) * 12.5%),var(--ink) calc(var(--k) * 12.5%),var(--ink) calc((var(--k) + 1) * 12.5%),transparent calc((var(--k) + 1) * 12.5%)),var(--line)}
+.cal .lgk i.slot{width:24px;background:linear-gradient(to right,transparent calc(var(--k) * 100% / var(--n,8)),var(--ink) calc(var(--k) * 100% / var(--n,8)),var(--ink) calc((var(--k) + 1) * 100% / var(--n,8)),transparent calc((var(--k) + 1) * 100% / var(--n,8))),var(--line)}
 .cal .fo{margin-top:7px;font-size:10px;color:var(--faint)}
 .cal .fo a{color:var(--dim);text-decoration:none;border-bottom:1px dotted var(--faint)}
 .cal .go-now{color:var(--warm);font-size:11px;letter-spacing:.1em;border-bottom:1px solid color-mix(in srgb,var(--warm) 45%,transparent)}
